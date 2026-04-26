@@ -1,5 +1,3 @@
-# AlgoTrading
-
 ## Requirements
 
 ```bash
@@ -24,13 +22,9 @@ python migrate.py migrate:fresh
 ## Jobs
 
 ```bash
+python get.py timeframe
 python get.py calendar
 python get.py news
-python get.py timeframe
-python get.py structure
-python get.py position
-python get.py swings
-python get.py decision
 ```
 
 ## CLEAR CACHE

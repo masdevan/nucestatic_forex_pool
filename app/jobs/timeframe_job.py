@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 from sqlalchemy import text
 import MetaTrader5 as mt5
 from app.databases.config import SessionLocal
-from app.api.configs.mt5_config import init_mt5, shutdown_mt5
+from app.api.models.configs.mt5_config import init_mt5, shutdown_mt5
 
 HISTORY_DAYS = 365
 PAIRS = [p.strip() for p in os.getenv("TRADE_PAIR", "USDJPYm").split(",") if p.strip()]
@@ -61,7 +61,7 @@ def get_session_from_time(ts):
         return 3
 
 
-def fetch_all_rates(pair, mt5_tf, chunk_size=1000, max_candles=10000, silent=False):
+def fetch_all_rates(pair, mt5_tf, chunk_size=1000, max_candles=5000, silent=False):
     all_rates = []
     start_pos = 0
 
@@ -105,7 +105,7 @@ def fetch_and_save_timeframe(pair, tf_name, is_initial=False):
             print(f"[{pair}][{tf_name}] Initial sync...")
             rates = fetch_all_rates(pair, mt5_tf, silent=not is_initial)
         else:
-            rates = mt5.copy_rates_from_pos(pair, mt5_tf, 0, 1000)
+            rates = mt5.copy_rates_from_pos(pair, mt5_tf, 0, 100)
     except Exception as e:
         print(f"[{pair}][{tf_name}] Fetch error: {e}")
         return 0
@@ -374,13 +374,7 @@ def run_job():
         print("MT5 initialization failed")
         return
 
-    account_info = mt5.account_info()
-    if account_info is None:
-        print("Failed to get account info")
-        shutdown_mt5()
-        return
-
-    print(f"MT5 connected. Account: {account_info.login}")
+    print("MT5 connected.")
     print(f"Pairs from env: {PAIRS}")
 
     valid_pairs = validate_pairs()

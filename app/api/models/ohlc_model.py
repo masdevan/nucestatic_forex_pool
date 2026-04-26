@@ -19,10 +19,3 @@ class OHLCResponse(BaseModel):
     end_date: str
     data: List[OHLCData]
     total_records: int
-
-class TimeframesResponse(BaseModel):
-    timeframes: List[str]
-
-class SymbolsResponse(BaseModel):
-    symbols: List[str]
-    total: int

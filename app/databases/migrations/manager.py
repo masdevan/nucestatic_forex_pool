@@ -10,21 +10,11 @@ TABLE_NAME = "alembic_version"
 
 TABLES = [
     "calendars",
-    "logs",
-    "positions",
     "news",
     "ohlc_m1",
     "ohlc_m5", 
     "ohlc_m15",
     "ohlc_h1",
-    "market_structure_m1",
-    "market_structure_m5",
-    "market_structure_m15",
-    "market_structure_h1",
-    "swings_m1",
-    "swings_m5",
-    "swings_m15",
-    "swings_h1",
 ]
 
 def ensure_database():

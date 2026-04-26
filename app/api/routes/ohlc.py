@@ -2,7 +2,7 @@ import os
 from typing import Optional
 from fastapi import APIRouter, Query
 from app.api.models.ohlc_model import OHLCResponse
-from app.api.controllers.ohlc_controller import get_ohlc_data as controller_get_ohlc, get_ohlc_today, get_ohlc_all
+from app.api.controllers.ohlc_controller import get_ohlc_data as controller_get_ohlc
 
 router = APIRouter()
 
@@ -101,41 +101,6 @@ def get_ohlc_with_filters(
         }
     finally:
         db.close()
-
-@router.get("/pairs")
-async def get_pairs():
-    return {"pairs": PAIRS}
-
-@router.get("")
-async def get_ohlc_data(
-    pair: str = Query(...),
-    timeframe: str = Query(...),
-    start_date: str = Query(...),
-    end_date: str = Query(...)
-):
-    return controller_get_ohlc(pair, timeframe, start_date, end_date)
-
-@router.get("/today", response_model=OHLCResponse)
-async def get_ohlc_today_route(
-    pair: str = Query(...),
-    timeframe: str = Query(...)
-):
-    return get_ohlc_today(pair, timeframe)
-
-@router.get("/all")
-async def get_ohlc_all_route(
-    pair: str = Query(...)
-):
-    return get_ohlc_all(pair)
-
-@router.get("/charts/{timeframe}")
-async def get_ohlc_charts(
-    timeframe: str,
-    symbol: Optional[str] = Query(None, description="Filter by symbol"),
-    start_time: Optional[int] = Query(None, description="Filter by start time (Unix timestamp)"),
-    end_time: Optional[int] = Query(None, description="Filter by end time (Unix timestamp)")
-):
-    return get_ohlc_with_filters(timeframe, symbol, start_time, end_time, page=1, limit=None)
 
 @router.get("/{timeframe}")
 async def get_ohlc(
