@@ -15,4 +15,5 @@
 # BASE INFO ENDPOINTS
 - GET /api/symbols
 - GET /api/timeframes
-- GET /health
+- GET /api/health
+- GET /api/time/now
