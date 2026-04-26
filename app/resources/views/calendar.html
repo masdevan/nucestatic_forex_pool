@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar - AlgoTrading</title>
+    <link rel="stylesheet" href="/resources/css/main.css">
+</head>
+<body>
+    <div class="container">
+        <div id="sidebar-container"></div>
+        
+        <div id="header-container" data-title="Economic Calendar"></div>
+        
+        <main class="main-content">
+            <div class="card">
+                <h3 class="card-title">Today's Events</h3>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width: 15%">Time</th>
+                                <th style="width: 10%">Currency</th>
+                                <th>Event</th>
+                                <th style="width: 10%">Impact</th>
+                                <th style="width: 10%">Actual</th>
+                                <th style="width: 10%">Forecast</th>
+                                <th style="width: 10%">Previous</th>
+                                <th style="width: 20%">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="calendar-today-table">
+                            <tr><td colspan="8" class="loading">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-title">All Events</h3>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width: 15%">Time</th>
+                                <th style="width: 10%">Currency</th>
+                                <th>Event</th>
+                                <th style="width: 10%">Impact</th>
+                                <th style="width: 10%">Actual</th>
+                                <th style="width: 10%">Forecast</th>
+                                <th style="width: 10%">Previous</th>
+                                <th style="width: 20%">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="calendar-table">
+                            <tr><td colspan="8" class="loading">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/resources/javascript/components.js"></script>
+    <script src="/resources/javascript/calendar.js"></script>
+</body>
+</html>

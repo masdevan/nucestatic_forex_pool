@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OHLC - AlgoTrading</title>
+    <link rel="stylesheet" href="/resources/css/main.css">
+    <style>
+        .control {
+            padding: 4px 8px;
+            border: 1px solid #555;
+            background: #2a2e39;
+            color: #d1d4dc;
+            font-size: 12px;
+            height: 26px;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="sidebar-container"></div>
+
+        <div id="header-container" data-title="OHLC"></div>
+
+        <main class="main-content">
+            <div class="card">
+                <div class="control-group" style="text-align: right;">
+                    <label for="pair-select">Pair:</label>
+                    <select id="pair-select" class="control">
+                        <option value="">Loading...</option>
+                    </select>
+                    <label for="timeframe-select" style="margin-left: 12px;">Timeframe:</label>
+                    <select id="timeframe-select" class="control">
+                        <option value="M1">M1</option>
+                        <option value="M5">M5</option>
+                        <option value="M15">M15</option>
+                        <option value="H1">H1</option>
+                    </select>
+                </div>
+
+                <div class="table-container" style="margin-top: 5px;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Time</th>
+                                <th>Session</th>
+                                <th>Done</th>
+                                <th>Open</th>
+                                <th>High</th>
+                                <th>Low</th>
+                                <th>Close</th>
+                                <th>Tick Volume</th>
+                                <th>ATR</th>
+                                <th>Sweep High</th>
+                                <th>Sweep Low</th>
+                                <th>Sweep Strength</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ohlc-table">
+                            <tr><td colspan="13" class="loading">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/resources/javascript/components.js"></script>
+    <script src="/resources/javascript/ohlc.js"></script>
+</body>
+</html>
