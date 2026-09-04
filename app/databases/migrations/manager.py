@@ -14,6 +14,7 @@ TABLES = [
     "ohlc_m15",
     "ohlc_h1",
     "symbols",
+    "symbol_ranges",
 ]
 
 def ensure_database():

@@ -46,13 +46,19 @@ async def symbols():
 
 @app.get("/api/symbols/{symbol}/range")
 async def symbol_range(symbol: str):
-    from app.api.models.configs.mt5_config import TIMEFRAME_MAP, init_mt5, get_mt5_range
-    if not init_mt5():
-        return {"symbol": symbol, "error": "MT5 not connected"}
-    ranges = []
-    for tf, mtf in TIMEFRAME_MAP.items():
-        ranges.append({"timeframe": tf.upper(), **get_mt5_range(symbol, mtf)})
-    return {"symbol": symbol, "ranges": ranges}
+    from app.databases.config import SessionLocal
+    db = SessionLocal()
+    try:
+        rows = db.execute(text(
+            "SELECT timeframe, first_ts, last_ts, count FROM symbol_ranges WHERE symbol = :sym ORDER BY FIELD(timeframe, 'M1','M5','M15','M30','H1','H4','D1','W1','MN1')"
+        ), {"sym": symbol}).fetchall()
+        return {"symbol": symbol, "ranges": [
+            {"timeframe": r[0], "first": r[1].strftime("%Y-%m-%d %H:%M:%S") if r[1] else None,
+             "last": r[2].strftime("%Y-%m-%d %H:%M:%S") if r[2] else None, "count": r[3]}
+            for r in rows
+        ]}
+    finally:
+        db.close()
 
 @app.get("/", include_in_schema=False)
 async def dashboard():

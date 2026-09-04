@@ -34,10 +34,12 @@ forex_pool
 │       │   ├── version_20260329_ohlc_m1.py
 │       │   ├── version_20260329_ohlc_m15.py
 │       │   ├── version_20260329_ohlc_m5.py
-│       │   └── version_20260904_symbols.py
+│       │   ├── version_20260904_symbols.py
+│       │   └── version_20260904_symbol_ranges.py
 │       ├── models
 │       │   └── symbol_model.py
 │       └── seeders
+│           ├── symbol_range_seeder.py
 │           └── symbol_seeder.py
 └── web
     ├── css
