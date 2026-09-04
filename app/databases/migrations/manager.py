@@ -9,8 +9,6 @@ MIGRATIONS_DIR = Path(__file__).parent
 TABLE_NAME = "alembic_version"
 
 TABLES = [
-    "calendars",
-    "news",
     "ohlc_m1",
     "ohlc_m5", 
     "ohlc_m15",

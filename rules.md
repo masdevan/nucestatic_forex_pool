@@ -1,0 +1,14 @@
+- You must understand the project structure first
+- Code must be clean and human-readable
+- Variables must have clear names
+- Code must meet QA standards
+- Use the Clean Architecture concept.
+- Architecture must be clean and modular
+- No errors allowed during development or when adding/creating code
+- No comments may be left behind in the code
+- Never run endless commands like a long-running server or build watcher
+- Never run commands that have no end or hang until timeout, like a blocking REPL or infinite loop
+- Never run the full test suite (pytest / python -m unittest) — it always looks frozen; verify with targeted commands only (pytest <satu-file>) or not at all
+- Never push to git unless explicitly asked
+- Every commit message must start with a feat: or fix: prefix (init: only for the first commit), followed by a short, clear, concise English description
+- When running tests, keep output short so the terminal never looks frozen: run only the relevant file (pytest path/to/file.py -k test_name), never pipe output through Select-String (it buffers everything until the process ends), and avoid commands that dump large output into the console; if a run gets huge, redirect output to a file instead

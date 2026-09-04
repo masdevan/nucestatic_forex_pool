@@ -18,17 +18,3 @@ Database will be created automatically if not exists.
 python migrate.py migrate
 python migrate.py migrate:fresh
 ```
-
-## Jobs
-
-```bash
-python get.py timeframe
-python get.py calendar
-python get.py news
-```
-
-## CLEAR CACHE
-
-```bash
-python get.py cache
-```

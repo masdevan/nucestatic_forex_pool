@@ -26,8 +26,4 @@ def get_db():
         db.close()
 
 def init_db():
-    from app.databases.models.calendar_model import Calendar
-    from app.databases.models.logs_model import Logs
-    from app.databases.models.positions_model import Positions
-    from app.databases.models.news_model import News
     Base.metadata.create_all(bind=engine)
