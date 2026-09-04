@@ -5,8 +5,9 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from sqlalchemy import text
 from app.api.routes.ohlc import router as ohlc_router
-from app.api.models.configs.mt5_config import init_mt5, shutdown_mt5, get_terminal_info, get_all_symbols
+from app.api.models.configs.mt5_config import init_mt5, shutdown_mt5, get_terminal_info
 
 load_dotenv()
 
@@ -35,7 +36,13 @@ async def health_check():
 
 @app.get("/api/symbols")
 async def symbols():
-    return {"symbols": get_all_symbols()}
+    from app.databases.config import SessionLocal
+    db = SessionLocal()
+    try:
+        rows = db.execute(text("SELECT name FROM symbols ORDER BY name ASC")).fetchall()
+        return {"symbols": [r[0] for r in rows]}
+    finally:
+        db.close()
 
 @app.get("/dashboard", include_in_schema=False)
 async def dashboard():

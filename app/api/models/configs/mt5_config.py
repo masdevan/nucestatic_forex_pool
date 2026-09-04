@@ -32,9 +32,3 @@ def get_rates_range(symbol: str, timeframe, start_ts: int, end_ts: int):
 
 def symbol_info_tick(symbol: str):
     return mt5.symbol_info_tick(symbol)
-
-def get_all_symbols():
-    symbols = mt5.symbols_get()
-    if symbols is None:
-        return []
-    return [s.name for s in symbols]

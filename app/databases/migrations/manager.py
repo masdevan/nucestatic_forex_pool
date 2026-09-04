@@ -13,6 +13,7 @@ TABLES = [
     "ohlc_m5", 
     "ohlc_m15",
     "ohlc_h1",
+    "symbols",
 ]
 
 def ensure_database():
