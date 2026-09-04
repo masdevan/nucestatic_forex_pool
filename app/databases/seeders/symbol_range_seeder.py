@@ -22,7 +22,9 @@ def seed_symbol_ranges(symbol_filter=None):
 
     with engine.begin() as conn:
         conn.execute(text("DELETE FROM symbol_ranges"))
-        for server, symbol in symbols:
+
+    for server, symbol in symbols:
+        with engine.begin() as conn:
             for tf_key, tf in TIMEFRAME_MAP.items():
                 total = _count_available(symbol, tf)
                 if total == 0:
@@ -49,7 +51,7 @@ def seed_symbol_ranges(symbol_filter=None):
                         "count": total,
                     },
                 )
-            print(f"Seeded {symbol} ({server})")
+        print(f"Seeded {symbol} ({server})")
     mt5.shutdown()
     print("Seed complete")
 
