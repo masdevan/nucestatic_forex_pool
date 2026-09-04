@@ -1,7 +1,13 @@
+import os
 import uvicorn
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from app.api.routes.ohlc import router as ohlc_router
 from app.api.models.configs.mt5_config import init_mt5, shutdown_mt5, get_terminal_info
+
+load_dotenv()
+
+PORT = int(os.getenv("PORT", "8765"))
 
 if not init_mt5():
     print("MT5 initialization failed")
@@ -32,6 +38,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
+        port=PORT,
         reload=True
     )
