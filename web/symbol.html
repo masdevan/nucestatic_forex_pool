@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symbol</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div id="header-slot"></div>
+
+    <div id="layout">
+        <div id="sidebar-slot"></div>
+
+        <main id="content">
+            <h1 id="symbol-title">-</h1>
+        </main>
+    </div>
+
+    <script src="/javascript/script.js"></script>
+    <script>
+        (function () {
+            const parts = window.location.pathname.split('/').filter(Boolean);
+            if (parts.length >= 2) {
+                document.getElementById('symbol-title').textContent =
+                    decodeURIComponent(parts[0]) + ' (' + decodeURIComponent(parts[1]) + ')';
+            }
+        })();
+    </script>
+</body>
+</html>

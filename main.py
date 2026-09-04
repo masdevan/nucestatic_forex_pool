@@ -52,7 +52,14 @@ async def index():
 async def dashboard():
     return FileResponse(Path(__file__).parent / "web" / "dashboard.html")
 
-app.mount("/", StaticFiles(directory=Path(__file__).parent / "web", html=True), name="web")
+WEB = Path(__file__).parent / "web"
+app.mount("/css", StaticFiles(directory=WEB / "css"), name="css")
+app.mount("/javascript", StaticFiles(directory=WEB / "javascript"), name="javascript")
+app.mount("/components", StaticFiles(directory=WEB / "components"), name="components")
+
+@app.get("/{name}/{server}", include_in_schema=False)
+async def symbol_page(name: str, server: str):
+    return FileResponse(WEB / "symbol.html")
 
 @app.on_event("shutdown")
 async def shutdown_event():

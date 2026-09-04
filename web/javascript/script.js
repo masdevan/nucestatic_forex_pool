@@ -53,7 +53,11 @@ async function loadSymbols() {
             ul.className = 'symbol-group-list';
             groups[server].forEach(name => {
                 const li = document.createElement('li');
-                li.textContent = name;
+                const a = document.createElement('a');
+                a.className = 'symbol-link';
+                a.textContent = name;
+                a.href = '/' + encodeURIComponent(name) + '/' + encodeURIComponent(server);
+                li.appendChild(a);
                 ul.appendChild(li);
             });
             container.appendChild(ul);

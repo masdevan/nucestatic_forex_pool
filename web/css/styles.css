@@ -146,6 +146,12 @@ h1 {
     background-color: #e5e7eb;
 }
 
+.symbol-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
 .symbol-group-header {
     font-size: 13px;
     font-weight: bold;
