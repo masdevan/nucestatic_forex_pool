@@ -12,9 +12,13 @@ async function checkMt5() {
         const res = await fetch('/api/health');
         const data = await res.json();
         const connected = data.mt5_connected;
+        dot.classList.remove('skeleton');
+        label.classList.remove('skeleton', 'skeleton-text');
         dot.style.backgroundColor = connected ? '#22c55e' : '#ef4444';
         label.textContent = 'MT5: ' + (connected ? 'Connected' : 'Disconnected');
     } catch (e) {
+        dot.classList.remove('skeleton');
+        label.classList.remove('skeleton', 'skeleton-text');
         dot.style.backgroundColor = '#ef4444';
         label.textContent = 'MT5: Tidak dapat terhubung';
     }

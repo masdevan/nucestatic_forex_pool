@@ -32,6 +32,29 @@ body {
     color: #1f2937;
 }
 
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.home-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1f2937;
+    text-decoration: none;
+}
+
+.home-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.home-link:hover {
+    color: #374151;
+}
+
 #header #mt5 {
     display: flex;
     align-items: center;
@@ -81,7 +104,7 @@ h1 {
 .sidebar-container {
     overflow: auto;
     width: auto;
-    height: calc(100vh - 14px - 45px - 8px - 24px);
+    height: calc(100vh - 14px - 45px - 8px - 48px);
 }
 
 #sidebar {
@@ -120,5 +143,42 @@ h1 {
 }
 
 #symbol-list li:hover {
+    background-color: #e5e7eb;
+}
+
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: #e5e7eb;
+}
+
+.skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    animation: shimmer 1.4s infinite;
+    transform: translateX(-100%);
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.skeleton-row {
+    height: 22px;
+    border-radius: 6px;
+}
+
+.skeleton-text {
+    display: inline-block;
+    width: 120px;
+    height: 14px;
+    border-radius: 4px;
+}
+
+#mt5 .dot.skeleton {
     background-color: #e5e7eb;
 }

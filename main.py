@@ -4,6 +4,7 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from app.api.routes.ohlc import router as ohlc_router
 from app.api.models.configs.mt5_config import init_mt5, shutdown_mt5, get_terminal_info, get_all_symbols
 
@@ -35,6 +36,10 @@ async def health_check():
 @app.get("/api/symbols")
 async def symbols():
     return {"symbols": get_all_symbols()}
+
+@app.get("/dashboard", include_in_schema=False)
+async def dashboard():
+    return FileResponse(Path(__file__).parent / "web" / "dashboard.html")
 
 app.mount("/", StaticFiles(directory=Path(__file__).parent / "web", html=True), name="web")
 
