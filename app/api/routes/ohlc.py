@@ -53,7 +53,7 @@ def get_ohlc_with_filters(
             params["limit"] = limit
             params["offset"] = (page - 1) * limit
             query = text(f"""
-                SELECT symbol, time, time_str, session, is_done, open, high, low, close, tick_volume, atr, sweep_high, sweep_low, sweep_strength
+                SELECT symbol, time, open, high, low, close, created_at
                 FROM {table_name}
                 WHERE {where_sql}
                 ORDER BY time DESC
@@ -78,7 +78,7 @@ def get_ohlc_with_filters(
             }
         else:
             query = text(f"""
-                SELECT symbol, time, time_str, session, is_done, open, high, low, close, tick_volume, atr, sweep_high, sweep_low, sweep_strength
+                SELECT symbol, time, open, high, low, close, created_at
                 FROM {table_name}
                 WHERE {where_sql}
                 ORDER BY time ASC

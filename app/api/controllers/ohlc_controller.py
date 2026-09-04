@@ -1,5 +1,4 @@
-from datetime import datetime, time
-from typing import List, Dict, Any
+from datetime import datetime
 import MetaTrader5 as mt5
 from app.api.models.configs.mt5_config import TIMEFRAME_MAP, init_mt5, shutdown_mt5, symbol_exists, get_rates_range
 from app.api.models.ohlc_model import OHLCData, OHLCResponse
@@ -43,14 +42,10 @@ def get_ohlc_data(pair: str, timeframe: str, start_date: str, end_date: str) -> 
     for rate in rates:
         data.append(OHLCData(
             time=int(rate[0]),
-            time_str=datetime.fromtimestamp(rate[0]).strftime("%Y-%m-%d %H:%M:%S"),
             open=float(rate[1]),
             high=float(rate[2]),
             low=float(rate[3]),
             close=float(rate[4]),
-            tick_volume=int(rate[5]),
-            spread=int(rate[6]),
-            real_volume=int(rate[7])
         ))
     
     return OHLCResponse(
