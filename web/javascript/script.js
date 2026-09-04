@@ -46,4 +46,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadComponent('#sidebar-slot', '/components/sidebar.html');
     checkMt5();
     loadSymbols();
+    initSidebarToggle();
 });
+
+function initSidebarToggle() {
+    const toggle = document.getElementById('menu-toggle');
+    const overlay = document.querySelector('.overlay');
+    if (!toggle || !overlay) return;
+    toggle.addEventListener('click', () => {
+        document.body.classList.toggle('sidebar-open');
+    });
+    overlay.addEventListener('click', () => {
+        document.body.classList.remove('sidebar-open');
+    });
+}
