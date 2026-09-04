@@ -105,6 +105,10 @@ h1 {
     color: #1f2937;
 }
 
+#symbol-title {
+    font-size: 20px;
+}
+
 .chart-range {
     margin-top: 24px;
     width: 100%;
@@ -344,10 +348,28 @@ body.sidebar-open {
         padding: 16px;
         width: 100%;
         box-sizing: border-box;
+        align-items: flex-start;
+        justify-content: flex-start;
+        overflow-y: auto;
     }
 
     h1 {
         font-size: 28px;
+    }
+
+    #symbol-title {
+        font-size: 18px;
+        align-self: center;
+    }
+
+    .chart-range {
+        margin-top: 16px;
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .range-table {
+        font-size: 12px;
     }
 
     #sidebar {
