@@ -1,9 +1,11 @@
 import os
+from pathlib import Path
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from app.api.routes.ohlc import router as ohlc_router
-from app.api.models.configs.mt5_config import init_mt5, shutdown_mt5, get_terminal_info
+from app.api.models.configs.mt5_config import init_mt5, shutdown_mt5, get_terminal_info, get_all_symbols
 
 load_dotenv()
 
@@ -29,6 +31,12 @@ async def health_check():
         "status": "healthy",
         "mt5_connected": terminal is not None
     }
+
+@app.get("/api/symbols")
+async def symbols():
+    return {"symbols": get_all_symbols()}
+
+app.mount("/", StaticFiles(directory=Path(__file__).parent / "web", html=True), name="web")
 
 @app.on_event("shutdown")
 async def shutdown_event():

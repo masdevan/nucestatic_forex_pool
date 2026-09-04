@@ -1,0 +1,124 @@
+body {
+    font-family: Consolas, monospace;
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #e5e7eb;
+    padding: 14px;
+    box-sizing: border-box;
+}
+
+#header {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    height: 45px;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    z-index: 10;
+    box-sizing: border-box;
+}
+
+#header .brand {
+    font-size: 16px;
+    font-weight: bold;
+    color: #1f2937;
+}
+
+#header #mt5 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#header .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #9ca3af;
+}
+
+#header .label {
+    font-size: 13px;
+    color: #4b5563;
+}
+
+#layout {
+    display: flex;
+    gap: 14px;
+    min-height: calc(100vh - 14px - 45px - 8px - 24px);
+    padding-top: calc(14px + 45px);
+    box-sizing: border-box;
+}
+
+#content {
+    flex: 1;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+h1 {
+    margin: 0;
+    font-size: 36px;
+    font-weight: bold;
+    color: #1f2937;
+}
+
+.sidebar-container {
+    overflow: auto;
+    width: auto;
+    height: calc(100vh - 14px - 45px - 8px - 24px);
+}
+
+#sidebar {
+    width: 260px;
+    min-width: 260px;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px #0000000d;
+    padding: 12px;
+    box-sizing: border-box;
+    overflow-y: hidden;
+    height: calc(100vh - 14px - 45px - 8px - 24px);
+    position: sticky;
+    top: calc(14px + 45px + 8px);
+}
+
+#symbol-list {
+    list-style: none;
+    margin: 0;
+    padding: 12px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+#symbol-list li {
+    font-size: 13px;
+    color: #1f2937;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#symbol-list li:hover {
+    background-color: #e5e7eb;
+}
