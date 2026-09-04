@@ -63,7 +63,6 @@
         </aside>
 
         <main id="content">
-            <h1 id="symbol-title">-</h1>
             <div id="chart-range" class="chart-range"></div>
         </main>
     </div>
@@ -75,7 +74,7 @@
             if (parts.length >= 2) {
                 const name = decodeURIComponent(parts[0]);
                 const server = decodeURIComponent(parts[1]);
-                document.getElementById('symbol-title').textContent = name + ' (' + server + ')';
+
                 fetch('/api/symbols/' + encodeURIComponent(name) + '/range')
                     .then(r => r.json())
                     .then(data => {
