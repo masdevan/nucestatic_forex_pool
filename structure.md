@@ -40,12 +40,9 @@ forex_pool
 │       └── seeders
 │           └── symbol_seeder.py
 └── web
-    ├── components
-    │   ├── header.html
-    │   └── sidebar.html
     ├── css
     │   └── styles.css
     ├── javascript
     │   └── script.js
-    ├── dashboard.html
-    └── index.html
+    ├── index.html
+    └── symbol.html

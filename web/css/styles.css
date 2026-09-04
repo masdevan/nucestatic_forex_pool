@@ -55,6 +55,10 @@ body {
     color: #374151;
 }
 
+.home-link.active {
+    color: #8b5e3c;
+}
+
 #header #mt5 {
     display: flex;
     align-items: center;
@@ -129,6 +133,15 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    transition: opacity 0.3s ease;
+}
+
+#symbol-list.fading {
+    opacity: 0;
+}
+
+#symbol-list.fading-in {
+    opacity: 1;
 }
 
 #symbol-list li {
@@ -144,6 +157,20 @@ h1 {
 
 #symbol-list li:hover {
     background-color: #e5e7eb;
+}
+
+.symbol-link.active,
+#symbol-list li:has(.symbol-link.active) {
+    background-color: #8b5e3c;
+    color: #ffffff;
+}
+
+.symbol-link.active {
+    border-radius: 6px;
+}
+
+#symbol-list li:has(.symbol-link.active):hover {
+    background-color: #8b5e3c;
 }
 
 .symbol-link {

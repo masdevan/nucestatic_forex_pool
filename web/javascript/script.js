@@ -1,9 +1,3 @@
-async function loadComponent(selector, url) {
-    const slot = document.querySelector(selector);
-    const res = await fetch(url);
-    slot.innerHTML = await res.text();
-}
-
 async function checkMt5() {
     const container = document.getElementById('mt5');
     const dot = container.querySelector('.dot');
@@ -38,8 +32,15 @@ async function loadSymbols() {
         Object.keys(groups).forEach(server => {
             groups[server].sort((a, b) => a.localeCompare(b));
         });
-        container.innerHTML = '';
         const serverNames = Object.keys(groups).sort((a, b) => a.localeCompare(b));
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        const activeName = pathParts.length >= 2 ? decodeURIComponent(pathParts[0]) : null;
+        const activeServer = pathParts.length >= 2 ? decodeURIComponent(pathParts[1]) : null;
+        container.classList.add('fading');
+        await new Promise(r => setTimeout(r, 300));
+        container.classList.remove('fading');
+        container.classList.add('fading-in');
+        container.innerHTML = '';
         serverNames.forEach(server => {
             const header = document.createElement('div');
             header.className = 'symbol-group-header';
@@ -57,19 +58,21 @@ async function loadSymbols() {
                 a.className = 'symbol-link';
                 a.textContent = name;
                 a.href = '/' + encodeURIComponent(name) + '/' + encodeURIComponent(server);
+                if (name === activeName && server === activeServer) {
+                    a.classList.add('active');
+                }
                 li.appendChild(a);
                 ul.appendChild(li);
             });
             container.appendChild(ul);
         });
+        setTimeout(() => container.classList.remove('fading-in'), 400);
     } catch (e) {
         container.innerHTML = '<li>Gagal memuat symbols</li>';
     }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadComponent('#header-slot', '/components/header.html');
-    await loadComponent('#sidebar-slot', '/components/sidebar.html');
     checkMt5();
     loadSymbols();
     initSidebarToggle();

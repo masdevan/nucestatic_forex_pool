@@ -4,7 +4,7 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse
 from sqlalchemy import text
 from app.api.routes.ohlc import router as ohlc_router
 from app.api.models.configs.mt5_config import init_mt5, shutdown_mt5, get_terminal_info
@@ -45,17 +45,12 @@ async def symbols():
         db.close()
 
 @app.get("/", include_in_schema=False)
-async def index():
-    return RedirectResponse("/dashboard")
-
-@app.get("/dashboard", include_in_schema=False)
 async def dashboard():
-    return FileResponse(Path(__file__).parent / "web" / "dashboard.html")
+    return FileResponse(Path(__file__).parent / "web" / "index.html")
 
 WEB = Path(__file__).parent / "web"
 app.mount("/css", StaticFiles(directory=WEB / "css"), name="css")
 app.mount("/javascript", StaticFiles(directory=WEB / "javascript"), name="javascript")
-app.mount("/components", StaticFiles(directory=WEB / "components"), name="components")
 
 @app.get("/{name}/{server}", include_in_schema=False)
 async def symbol_page(name: str, server: str):
