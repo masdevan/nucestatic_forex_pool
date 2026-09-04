@@ -39,8 +39,8 @@ async def symbols():
     from app.databases.config import SessionLocal
     db = SessionLocal()
     try:
-        rows = db.execute(text("SELECT name FROM symbols ORDER BY name ASC")).fetchall()
-        return {"symbols": [r[0] for r in rows]}
+        rows = db.execute(text("SELECT server, name FROM symbols ORDER BY name ASC")).fetchall()
+        return {"symbols": [{"server": r[0], "name": r[1]} for r in rows]}
     finally:
         db.close()
 

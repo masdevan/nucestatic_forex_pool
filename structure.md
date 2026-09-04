@@ -2,16 +2,21 @@ forex_pool
 ├── .env
 ├── .env.example
 ├── .gitignore
+├── .vscode
+│   ├── extensions.json
+│   ├── launch.json
+│   ├── settings.json
+│   ├── spellright.dict
+│   └── tasks.json
 ├── endpoints.md
 ├── main.py
 ├── migrate.py
 ├── readme.md
 ├── requirements.txt
 ├── rules.md
+├── structure.md
 ├── app
-│   ├── main.py
 │   ├── api
-│   │   ├── __init__.py
 │   │   ├── controllers
 │   │   │   └── ohlc_controller.py
 │   │   ├── models
@@ -28,5 +33,19 @@ forex_pool
 │       │   ├── version_20260329_ohlc_h1.py
 │       │   ├── version_20260329_ohlc_m1.py
 │       │   ├── version_20260329_ohlc_m15.py
-│       │   └── version_20260329_ohlc_m5.py
-│       └── models
+│       │   ├── version_20260329_ohlc_m5.py
+│       │   └── version_20260904_symbols.py
+│       ├── models
+│       │   └── symbol_model.py
+│       └── seeders
+│           └── symbol_seeder.py
+└── web
+    ├── components
+    │   ├── header.html
+    │   └── sidebar.html
+    ├── css
+    │   └── styles.css
+    ├── javascript
+    │   └── script.js
+    ├── dashboard.html
+    └── index.html

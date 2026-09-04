@@ -146,6 +146,46 @@ h1 {
     background-color: #e5e7eb;
 }
 
+.symbol-group-header {
+    font-size: 13px;
+    font-weight: bold;
+    color: #8b5e3c;
+    padding: 6px 8px;
+    margin-top: 6px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 6px;
+}
+
+.symbol-group-header:hover {
+    background-color: #f3f4f6;
+}
+
+.symbol-group-header::after {
+    content: '\25be';
+    font-size: 10px;
+}
+
+.symbol-group-header.collapsed::after {
+    content: '\25b8';
+}
+
+.symbol-group-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.symbol-group-header.collapsed + .symbol-group-list {
+    display: none;
+}
+
 .skeleton {
     position: relative;
     overflow: hidden;

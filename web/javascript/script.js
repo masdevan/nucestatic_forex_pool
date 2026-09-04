@@ -25,19 +25,41 @@ async function checkMt5() {
 }
 
 async function loadSymbols() {
-    const list = document.getElementById('symbol-list');
+    const container = document.getElementById('symbol-list');
     try {
         const res = await fetch('/api/symbols');
         const data = await res.json();
-        const symbols = data.symbols.slice().sort((a, b) => a.localeCompare(b));
-        list.innerHTML = '';
-        symbols.forEach(sym => {
-            const li = document.createElement('li');
-            li.textContent = sym;
-            list.appendChild(li);
+        const groups = {};
+        data.symbols.forEach(sym => {
+            const key = sym.server || 'Unknown';
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(sym.name);
+        });
+        Object.keys(groups).forEach(server => {
+            groups[server].sort((a, b) => a.localeCompare(b));
+        });
+        container.innerHTML = '';
+        const serverNames = Object.keys(groups).sort((a, b) => a.localeCompare(b));
+        serverNames.forEach(server => {
+            const header = document.createElement('div');
+            header.className = 'symbol-group-header';
+            header.textContent = server;
+            header.addEventListener('click', () => {
+                header.classList.toggle('collapsed');
+            });
+            container.appendChild(header);
+
+            const ul = document.createElement('ul');
+            ul.className = 'symbol-group-list';
+            groups[server].forEach(name => {
+                const li = document.createElement('li');
+                li.textContent = name;
+                ul.appendChild(li);
+            });
+            container.appendChild(ul);
         });
     } catch (e) {
-        list.innerHTML = '<li>Gagal memuat symbols</li>';
+        container.innerHTML = '<li>Gagal memuat symbols</li>';
     }
 }
 
