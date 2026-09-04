@@ -32,3 +32,28 @@ def get_rates_range(symbol: str, timeframe, start_ts: int, end_ts: int):
 
 def symbol_info_tick(symbol: str):
     return mt5.symbol_info_tick(symbol)
+
+def _count_available(symbol: str, timeframe) -> int:
+    high = 1
+    while mt5.copy_rates_from_pos(symbol, timeframe, high, 1) is not None:
+        high *= 2
+    low = high // 2
+    while low < high:
+        mid = (low + high + 1) // 2
+        if mt5.copy_rates_from_pos(symbol, timeframe, mid - 1, 1) is not None:
+            low = mid
+        else:
+            high = mid - 1
+    return low
+
+def get_mt5_range(symbol: str, timeframe) -> dict:
+    total = _count_available(symbol, timeframe)
+    if total == 0:
+        return {"first": None, "last": None, "count": 0}
+    first = mt5.copy_rates_from_pos(symbol, timeframe, total - 1, 1)
+    last = mt5.copy_rates_from_pos(symbol, timeframe, 0, 1)
+    return {
+        "first": datetime.fromtimestamp(int(first[0][0])).strftime("%Y-%m-%d %H:%M:%S") if first is not None else None,
+        "last": datetime.fromtimestamp(int(last[0][0])).strftime("%Y-%m-%d %H:%M:%S") if last is not None else None,
+        "count": total,
+    }

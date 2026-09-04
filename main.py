@@ -44,6 +44,16 @@ async def symbols():
     finally:
         db.close()
 
+@app.get("/api/symbols/{symbol}/range")
+async def symbol_range(symbol: str):
+    from app.api.models.configs.mt5_config import TIMEFRAME_MAP, init_mt5, get_mt5_range
+    if not init_mt5():
+        return {"symbol": symbol, "error": "MT5 not connected"}
+    ranges = []
+    for tf, mtf in TIMEFRAME_MAP.items():
+        ranges.append({"timeframe": tf.upper(), **get_mt5_range(symbol, mtf)})
+    return {"symbol": symbol, "ranges": ranges}
+
 @app.get("/", include_in_schema=False)
 async def dashboard():
     return FileResponse(Path(__file__).parent / "web" / "index.html")
