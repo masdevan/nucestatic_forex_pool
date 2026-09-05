@@ -59,24 +59,6 @@ body {
     color: #8b5e3c;
 }
 
-#header #mt5 {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-#header .dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background-color: #9ca3af;
-}
-
-#header .label {
-    font-size: 13px;
-    color: #4b5563;
-}
-
 #layout {
     display: flex;
     gap: 14px;
@@ -286,10 +268,6 @@ h1 {
     width: 120px;
     height: 14px;
     border-radius: 4px;
-}
-
-#mt5 .dot.skeleton {
-    background-color: #e5e7eb;
 }
 
 .menu-toggle {
