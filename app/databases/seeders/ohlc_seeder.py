@@ -255,6 +255,37 @@ def mode_fresh(symbols, status):
     display_symbols(symbols, status)
 
 
+def mode_range(symbols, status):
+    raw_start = input("Start symbol #: ").strip()
+    raw_end = input("End symbol #: ").strip()
+    if not raw_start.isdigit() or not raw_end.isdigit():
+        print("Invalid input.")
+        return
+    start = int(raw_start) - 1
+    end = int(raw_end)
+    if start < 0 or end > len(symbols) or start >= end:
+        print("Invalid range.")
+        return
+
+    selected = symbols[start:end]
+    print(f"\n{len(selected)} symbols selected ({selected[0][0]} → {selected[-1][0]})")
+
+    confirm = input("Seed these? (y/n): ").strip().lower()
+    if confirm != "y":
+        print("Cancelled.")
+        return
+
+    for i, (sym_name, server) in enumerate(selected, 1):
+        print(f"\n[{i}/{len(selected)}] Seeding {sym_name}...")
+        total = 0
+        for tf in TIMEFRAMES:
+            total += seed_single(sym_name, tf)
+        print(f"  {sym_name} complete ({total:,} total bars)")
+
+    status = get_all_table_status()
+    display_symbols(symbols, status)
+
+
 def main():
     if not init_mt5():
         print("MT5 initialize failed")
@@ -276,9 +307,10 @@ Seed modes:
   2. Single symbol, all timeframes
   3. All unseeded timeframes
   4. Fresh (all symbols, all timeframes)
+  5. Range of symbols (all timeframes)
 """)
 
-    choice = input("Select mode (1-4): ").strip()
+    choice = input("Select mode (1-5): ").strip()
 
     if not init_mt5():
         print("MT5 initialize failed")
@@ -292,6 +324,8 @@ Seed modes:
         mode_unseeded(symbols, status)
     elif choice == "4":
         mode_fresh(symbols, status)
+    elif choice == "5":
+        mode_range(symbols, status)
     else:
         print("Invalid choice.")
 
