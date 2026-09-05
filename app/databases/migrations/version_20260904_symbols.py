@@ -7,7 +7,8 @@ def upgrade(conn):
             server VARCHAR(100) NOT NULL DEFAULT '',
             name VARCHAR(100) NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE KEY unique_symbol_server (server, name)
+            UNIQUE KEY unique_symbol_server (server, name),
+            INDEX idx_name (name)
         )
     """))
 
