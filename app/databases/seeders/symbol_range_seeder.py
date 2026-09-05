@@ -20,10 +20,15 @@ def seed_symbol_ranges(symbol_filter=None):
         mt5.shutdown()
         return
 
-    with engine.begin() as conn:
-        conn.execute(text("DELETE FROM symbol_ranges"))
+    seeded = _get_seeded_symbols()
+    if seeded:
+        print(f"Resuming: {len(seeded)} symbols already seeded, skipping.")
+    skipped = 0
 
     for i, (server, symbol) in enumerate(symbols, 1):
+        if symbol in seeded:
+            skipped += 1
+            continue
         print(f"\n[{i}/{len(symbols)}] {symbol} ({server})")
         with engine.begin() as conn:
             for tf_key, tf in TIMEFRAME_MAP.items():
@@ -56,7 +61,14 @@ def seed_symbol_ranges(symbol_filter=None):
                 )
                 print(f"  {tf_key.upper():>4}: {total:>10,} bars → ✓")
     mt5.shutdown()
+    if skipped:
+        print(f"\nSkipped {skipped} already seeded symbols.")
     print("Seed complete")
+
+def _get_seeded_symbols():
+    with engine.connect() as conn:
+        rows = conn.execute(text("SELECT DISTINCT symbol FROM symbol_ranges")).fetchall()
+    return {r[0] for r in rows}
 
 def _to_dt(ts):
     from datetime import datetime
