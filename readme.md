@@ -19,9 +19,10 @@ python migrate.py migrate
 python migrate.py migrate:fresh
 ```
 
-## Seeding 
+## Seeding
 
 ```bash
 python -m app.databases.seeders.symbol_seeder
 python -m app.databases.seeders.symbol_range_seeder
+python -m app.databases.seeders.ohlc_seeder
 ```

@@ -23,15 +23,18 @@ def seed_symbol_ranges(symbol_filter=None):
     with engine.begin() as conn:
         conn.execute(text("DELETE FROM symbol_ranges"))
 
-    for server, symbol in symbols:
+    for i, (server, symbol) in enumerate(symbols, 1):
+        print(f"\n[{i}/{len(symbols)}] {symbol} ({server})")
         with engine.begin() as conn:
             for tf_key, tf in TIMEFRAME_MAP.items():
                 total = _count_available(symbol, tf)
                 if total == 0:
+                    print(f"  {tf_key.upper():>4}: {'no data':>12}")
                     continue
                 first = mt5.copy_rates_from_pos(symbol, tf, total - 1, 1)
                 last = mt5.copy_rates_from_pos(symbol, tf, 0, 1)
                 if first is None or last is None:
+                    print(f"  {tf_key.upper():>4}: {'no data':>12}")
                     continue
                 conn.execute(
                     text("""
@@ -51,7 +54,7 @@ def seed_symbol_ranges(symbol_filter=None):
                         "count": total,
                     },
                 )
-        print(f"Seeded {symbol} ({server})")
+                print(f"  {tf_key.upper():>4}: {total:>10,} bars → ✓")
     mt5.shutdown()
     print("Seed complete")
 

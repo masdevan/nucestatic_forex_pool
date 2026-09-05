@@ -30,21 +30,20 @@ forex_pool
 │       ├── config.py
 │       ├── migrations
 │       │   ├── manager.py
-│       │   ├── version_20260329_ohlc_h1.py
-│       │   ├── version_20260329_ohlc_m1.py
-│       │   ├── version_20260329_ohlc_m15.py
-│       │   ├── version_20260329_ohlc_m5.py
-│       │   ├── version_20260904_symbols.py
-│       │   └── version_20260904_symbol_ranges.py
+│       │   ├── version_20260904_ohlc_dynamic.py
+│       │   ├── version_20260904_symbol_ranges.py
+│       │   └── version_20260904_symbols.py
 │       ├── models
 │       │   └── symbol_model.py
 │       └── seeders
+│           ├── ohlc_seeder.py
 │           ├── symbol_range_seeder.py
 │           └── symbol_seeder.py
 └── web
     ├── css
     │   └── styles.css
     ├── javascript
-    │   └── script.js
+    │   ├── script.js
+    │   └── symbol.js
     ├── index.html
     └── symbol.html
