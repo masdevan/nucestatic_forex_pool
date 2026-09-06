@@ -1,23 +1,14 @@
-import os
 from typing import Optional
 from fastapi import APIRouter, Query
-from app.api.models.ohlc_model import OHLCResponse
-from app.api.controllers.ohlc_controller import get_ohlc_data as controller_get_ohlc
 
 router = APIRouter()
 
-PAIRS = [p.strip() for p in os.getenv("TRADE_PAIR", "USDJPYm").split(",") if p.strip()]
+TIMEFRAME_LIST = ["m1", "m5", "m15", "m30", "h1", "h4", "d1", "w1", "mn1"]
 
-TABLE_MAP = {
-    "M1": "ohlc_m1",
-    "M5": "ohlc_m5",
-    "M15": "ohlc_m15",
-    "H1": "ohlc_h1",
-}
 
 def get_ohlc_with_filters(
     timeframe: str,
-    symbol: Optional[str] = None,
+    symbol: str,
     start_time: Optional[int] = None,
     end_time: Optional[int] = None,
     page: int = 1,
@@ -26,18 +17,19 @@ def get_ohlc_with_filters(
     from app.databases.config import SessionLocal
     from sqlalchemy import text
 
-    table_name = TABLE_MAP.get(timeframe.upper())
-    if not table_name:
-        return {"data": [], "pagination": {"page": 1, "limit": limit or 50, "total": 0, "total_pages": 0, "has_next": False, "has_prev": False}}
+    table_name = f"ohlc_{symbol.lower()}_{timeframe.lower()}"
 
     db = SessionLocal()
     try:
-        where_clauses = []
-        params = {}
+        check = db.execute(text(
+            "SELECT COUNT(*) FROM information_schema.tables "
+            "WHERE table_schema = DATABASE() AND table_name = :tbl"
+        ), {"tbl": table_name}).scalar()
+        if not check:
+            return {"data": [], "pagination": {"page": 1, "limit": limit or 50, "total": 0, "total_pages": 0, "has_next": False, "has_prev": False}}
 
-        if symbol:
-            where_clauses.append("symbol = :symbol")
-            params["symbol"] = symbol
+        where_clauses = ["symbol = :symbol"]
+        params = {"symbol": symbol}
 
         if start_time:
             where_clauses.append("time >= :start_time")
@@ -47,24 +39,23 @@ def get_ohlc_with_filters(
             where_clauses.append("time <= :end_time")
             params["end_time"] = end_time
 
-        where_sql = " AND ".join(where_clauses) if where_clauses else "1=1"
+        where_sql = " AND ".join(where_clauses)
 
         if limit is not None:
             params["limit"] = limit
             params["offset"] = (page - 1) * limit
             query = text(f"""
-                SELECT symbol, time, open, high, low, close, created_at
-                FROM {table_name}
+                SELECT symbol, time, open, high, low, close
+                FROM `{table_name}`
                 WHERE {where_sql}
                 ORDER BY time DESC
                 LIMIT :limit OFFSET :offset
             """)
-            result = db.execute(query, params)
-            rows = result.fetchall()
+            rows = db.execute(query, params).fetchall()
 
-            count_query = text(f"SELECT COUNT(*) FROM {table_name} WHERE {where_sql}")
-            count_result = db.execute(count_query, params)
-            total = count_result.scalar()
+            total = db.execute(
+                text(f"SELECT COUNT(*) FROM `{table_name}` WHERE {where_sql}"), params
+            ).scalar()
 
             total_pages = (total + limit - 1) // limit if total else 0
 
@@ -78,13 +69,12 @@ def get_ohlc_with_filters(
             }
         else:
             query = text(f"""
-                SELECT symbol, time, open, high, low, close, created_at
-                FROM {table_name}
+                SELECT symbol, time, open, high, low, close
+                FROM `{table_name}`
                 WHERE {where_sql}
                 ORDER BY time ASC
             """)
-            result = db.execute(query, params)
-            rows = result.fetchall()
+            rows = db.execute(query, params).fetchall()
 
             pagination = {
                 "page": 1,
@@ -102,12 +92,13 @@ def get_ohlc_with_filters(
     finally:
         db.close()
 
+
 @router.get("/{timeframe}")
 async def get_ohlc(
     timeframe: str,
-    symbol: Optional[str] = Query(None, description="Filter by symbol"),
-    start_time: Optional[int] = Query(None, description="Filter by start time (Unix timestamp)"),
-    end_time: Optional[int] = Query(None, description="Filter by end time (Unix timestamp)"),
+    symbol: str = Query(..., description="Symbol name"),
+    start_time: Optional[int] = Query(None, description="Start time (Unix timestamp)"),
+    end_time: Optional[int] = Query(None, description="End time (Unix timestamp)"),
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=100)
 ):

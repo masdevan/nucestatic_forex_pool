@@ -36,6 +36,7 @@ forex_pool
 │       ├── models
 │       │   └── symbol_model.py
 │       └── seeders
+│           ├── categories.py
 │           ├── ohlc_seeder.py
 │           ├── symbol_range_seeder.py
 │           └── symbol_seeder.py

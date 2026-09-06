@@ -59,7 +59,30 @@
         </aside>
 
         <main id="content">
-            <div id="chart-range" class="chart-range"></div>
+            <div class="tabs">
+                <button class="tab active" data-tab="details">Details</button>
+                <button class="tab" data-tab="m1">M1</button>
+                <button class="tab" data-tab="m5">M5</button>
+                <button class="tab" data-tab="m15">M15</button>
+                <button class="tab" data-tab="m30">M30</button>
+                <button class="tab" data-tab="h1">H1</button>
+                <button class="tab" data-tab="h4">H4</button>
+                <button class="tab" data-tab="d1">D1</button>
+                <button class="tab" data-tab="w1">W1</button>
+                <button class="tab" data-tab="mn1">MN1</button>
+            </div>
+            <div id="tab-content">
+                <div id="tab-details" class="tab-panel active"></div>
+                <div id="tab-m1" class="tab-panel"></div>
+                <div id="tab-m5" class="tab-panel"></div>
+                <div id="tab-m15" class="tab-panel"></div>
+                <div id="tab-m30" class="tab-panel"></div>
+                <div id="tab-h1" class="tab-panel"></div>
+                <div id="tab-h4" class="tab-panel"></div>
+                <div id="tab-d1" class="tab-panel"></div>
+                <div id="tab-w1" class="tab-panel"></div>
+                <div id="tab-mn1" class="tab-panel"></div>
+            </div>
         </main>
     </div>
 

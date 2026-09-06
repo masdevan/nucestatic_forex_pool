@@ -3,6 +3,7 @@ body {
     margin: 0;
     height: 100vh;
     overflow: hidden;
+    overflow-x: hidden;
     background-color: #e5e7eb;
     padding: 14px;
     box-sizing: border-box;
@@ -62,7 +63,7 @@ body {
 #layout {
     display: flex;
     gap: 14px;
-    min-height: calc(100vh - 14px - 45px - 8px - 24px);
+    height: calc(100vh - 14px - 18px);
     padding-top: calc(14px + 45px);
     box-sizing: border-box;
 }
@@ -76,8 +77,10 @@ body {
     padding: 24px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow: hidden;
+    min-height: 0;
 }
 
 h1 {
@@ -121,6 +124,120 @@ h1 {
     text-align: center;
     width: 100%;
     margin: 0;
+}
+
+.tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    min-width: 0;
+    width: 100%;
+}
+
+.tab {
+    padding: 8px 16px;
+    cursor: pointer;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 6px;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    color: #1f2937;
+    transition: background 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.tab:hover {
+    background: #e5e7eb;
+}
+
+.tab.active {
+    background: #8b5e3c;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.tab-panel {
+    display: none;
+    width: 100%;
+    min-width: 0;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+#tab-content {
+    width: 100%;
+    min-width: 0;
+    flex: 1;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.ohlc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.ohlc-table th,
+.ohlc-table td {
+    border: 1px solid #d1d5db;
+    padding: 6px 8px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.ohlc-table th {
+    background-color: #f3f4f6;
+    color: #1f2937;
+    position: sticky;
+    top: 0;
+}
+
+.ohlc-table tr:hover {
+    background-color: #f9fafb;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.pg-btn {
+    padding: 6px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    cursor: pointer;
+    color: #1f2937;
+}
+
+.pg-btn:hover:not(:disabled) {
+    background: #f3f4f6;
+}
+
+.pg-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.pg-info {
+    font-size: 12px;
+    color: #6b7280;
 }
 
 .sidebar-container {
@@ -319,7 +436,7 @@ body.sidebar-open {
 
     #layout {
         gap: 0;
-        min-height: calc(100vh - 8px - 8px);
+        min-height: 100%;
         padding-top: calc(8px + 45px + 8px);
         box-sizing: border-box;
     }
@@ -328,10 +445,17 @@ body.sidebar-open {
         flex: 1;
         padding: 16px;
         width: 100%;
+        min-width: 0;
         box-sizing: border-box;
         align-items: flex-start;
         justify-content: flex-start;
-        overflow-y: auto;
+        overflow: hidden;
+        min-height: 0;
+    }
+
+    #tab-content {
+        width: 100%;
+        min-width: 0;
     }
 
     h1 {
@@ -351,6 +475,11 @@ body.sidebar-open {
 
     .range-table {
         font-size: 12px;
+    }
+
+    .range-table td,
+    .range-table th {
+        white-space: nowrap;
     }
 
     #sidebar {
