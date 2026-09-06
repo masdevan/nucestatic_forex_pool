@@ -6,11 +6,36 @@
     var currentTf = null;
     var tfState = {};
 
+    function skeletonRows(count, cols) {
+        var html = '';
+        for (var i = 0; i < count; i++) {
+            html += '<tr>';
+            for (var j = 0; j < cols; j++) {
+                html += '<td><div class="skeleton skeleton-text"></div></td>';
+            }
+            html += '</tr>';
+        }
+        return html;
+    }
+
+    function skeletonDetails() {
+        return '<div class="table-scroll"><table class="range-table"><thead><tr>' +
+            '<th>Timeframe</th><th>Data pertama</th><th>Data terakhir</th><th>Jumlah</th>' +
+            '</tr></thead><tbody>' + skeletonRows(8, 4) + '</tbody></table></div>';
+    }
+
+    function skeletonOhlc() {
+        return '<div class="table-scroll"><table class="ohlc-table"><thead><tr>' +
+            '<th>Symbol</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th>Time</th>' +
+            '</tr></thead><tbody>' + skeletonRows(20, 6) + '</tbody></table></div>';
+    }
+
     function loadDetails() {
+        var el = document.getElementById('tab-details');
+        el.innerHTML = skeletonDetails();
         fetch('/api/symbols/' + encodeURIComponent(name) + '/range')
             .then(function (r) { return r.json(); })
             .then(function (data) {
-                var el = document.getElementById('tab-details');
                 if (!data.ranges || data.ranges.length === 0) {
                     el.innerHTML = '<p class="range-empty">Belum ada data.</p>';
                     return;
@@ -24,7 +49,7 @@
                 el.innerHTML = html;
             })
             .catch(function () {
-                document.getElementById('tab-details').innerHTML = '<p class="range-empty">Gagal memuat.</p>';
+                el.innerHTML = '<p class="range-empty">Gagal memuat.</p>';
             });
     }
 
@@ -47,11 +72,7 @@
 
     function initOhlcTab(tf) {
         var el = document.getElementById('tab-' + tf);
-        el.innerHTML =
-            '<div class="table-scroll"><table class="ohlc-table"><thead><tr>' +
-            '<th>Symbol</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th>Time</th>' +
-            '</tr></thead><tbody></tbody></table></div>' +
-            '<div class="load-sentinel"></div>';
+        el.innerHTML = skeletonOhlc() + '<div class="load-sentinel"></div>';
         tfState[tf] = { page: 0, totalPages: 1, loading: false };
     }
 
@@ -71,6 +92,8 @@
                 var tbody = document.querySelector('#tab-' + tf + ' .ohlc-table tbody');
                 if (res.data.length === 0 && s.page === 1) {
                     tbody.innerHTML = '<tr><td colspan="6" class="range-empty">Tidak ada data.</td></tr>';
+                } else if (s.page === 1) {
+                    tbody.innerHTML = buildRowsHtml(res.data);
                 } else {
                     tbody.insertAdjacentHTML('beforeend', buildRowsHtml(res.data));
                 }
@@ -120,5 +143,7 @@
         });
     });
 
+    var detailsPanel = document.getElementById('tab-details');
+    detailsPanel.classList.add('active');
     loadDetails();
 })();
