@@ -102,13 +102,17 @@ h1 {
 
 .range-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 13px;
+    border-left: 1px solid #d1d5db;
 }
 
 .range-table th,
 .range-table td {
-    border: 1px solid #d1d5db;
+    border: none;
+    border-right: 1px solid #d1d5db;
+    border-bottom: 1px solid #d1d5db;
     padding: 8px 10px;
     text-align: left;
 }
@@ -116,6 +120,10 @@ h1 {
 .range-table th {
     background-color: #f3f4f6;
     color: #1f2937;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-top: 1px solid #d1d5db;
 }
 
 .range-empty {
@@ -166,8 +174,6 @@ h1 {
     display: none;
     width: 100%;
     min-width: 0;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
 }
 
 .tab-panel.active {
@@ -184,13 +190,17 @@ h1 {
 
 .ohlc-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 12px;
+    border-left: 1px solid #d1d5db;
 }
 
 .ohlc-table th,
 .ohlc-table td {
-    border: 1px solid #d1d5db;
+    border: none;
+    border-right: 1px solid #d1d5db;
+    border-bottom: 1px solid #d1d5db;
     padding: 6px 8px;
     text-align: left;
     white-space: nowrap;
@@ -201,6 +211,8 @@ h1 {
     color: #1f2937;
     position: sticky;
     top: 0;
+    z-index: 1;
+    border-top: 1px solid #d1d5db;
 }
 
 .ohlc-table tr:hover {
@@ -238,6 +250,10 @@ h1 {
 .pg-info {
     font-size: 12px;
     color: #6b7280;
+}
+
+.load-sentinel {
+    height: 1px;
 }
 
 .sidebar-container {

@@ -3,8 +3,8 @@
     if (parts.length < 2) return;
 
     var name = decodeURIComponent(parts[0]);
-    var tfCache = {};
     var currentTf = null;
+    var tfState = {};
 
     function loadDetails() {
         fetch('/api/symbols/' + encodeURIComponent(name) + '/range')
@@ -15,12 +15,12 @@
                     el.innerHTML = '<p class="range-empty">Belum ada data.</p>';
                     return;
                 }
-                var html = '<div class="table-scroll"><table class="range-table"><tr><th>Timeframe</th><th>Data pertama</th><th>Data terakhir</th><th>Jumlah</th></tr>';
+                var html = '<div class="table-scroll"><table class="range-table"><thead><tr><th>Timeframe</th><th>Data pertama</th><th>Data terakhir</th><th>Jumlah</th></tr></thead><tbody>';
                 data.ranges.forEach(function (rg) {
                     html += '<tr><td>' + rg.timeframe + '</td><td>' + rg.first +
                         '</td><td>' + rg.last + '</td><td>' + rg.count + '</td></tr>';
                 });
-                html += '</table></div>';
+                html += '</tbody></table></div>';
                 el.innerHTML = html;
             })
             .catch(function () {
@@ -28,55 +28,76 @@
             });
     }
 
-    function renderOhlcTable(data, page, totalPages) {
-        var html = '<table class="ohlc-table"><thead><tr>' +
-            '<th>Symbol</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th>Time</th>' +
-            '</tr></thead><tbody>';
-        if (data.length === 0) {
-            html += '<tr><td colspan="6" class="range-empty">Tidak ada data.</td></tr>';
-        } else {
-            data.forEach(function (row) {
-                var t = row.time;
-                if (typeof t === 'number') {
-                    t = new Date(t * 1000).toLocaleString();
-                } else if (typeof t === 'string') {
-                    t = t.replace('T', ' ').substring(0, 19);
-                }
-                html += '<tr><td>' + row.symbol + '</td><td>' + row.open +
-                    '</td><td>' + row.high + '</td><td>' + row.low +
-                    '</td><td>' + row.close + '</td><td>' + t + '</td></tr>';
-            });
-        }
-        html += '</tbody></table>';
-        if (totalPages > 1) {
-            html += '<div class="pagination">';
-            html += '<button class="pg-btn" data-pg="' + (page - 1) + '"' + (page <= 1 ? ' disabled' : '') + '>&laquo; Prev</button>';
-            html += '<span class="pg-info">Halaman ' + page + ' / ' + totalPages + '</span>';
-            html += '<button class="pg-btn" data-pg="' + (page + 1) + '"' + (page >= totalPages ? ' disabled' : '') + '>Next &raquo;</button>';
-            html += '</div>';
-        }
+    function formatTime(val) {
+        if (typeof val === 'number') return new Date(val * 1000).toLocaleString();
+        if (typeof val === 'string') return val.replace('T', ' ').substring(0, 19);
+        return val;
+    }
+
+    function buildRowsHtml(data) {
+        var html = '';
+        data.forEach(function (row) {
+            var t = formatTime(row.time);
+            html += '<tr><td>' + row.symbol + '</td><td>' + row.open +
+                '</td><td>' + row.high + '</td><td>' + row.low +
+                '</td><td>' + row.close + '</td><td>' + t + '</td></tr>';
+        });
         return html;
     }
 
-    function loadOhlc(tf, page) {
-        page = page || 1;
-        var cacheKey = tf + '_' + page;
-        if (tfCache[cacheKey]) {
-            var c = tfCache[cacheKey];
-            document.getElementById('tab-' + tf).innerHTML = renderOhlcTable(c.data, c.pagination.page, c.pagination.total_pages);
-            return;
-        }
+    function initOhlcTab(tf) {
         var el = document.getElementById('tab-' + tf);
-        el.innerHTML = '<p class="range-empty">Memuat...</p>';
-        fetch('/api/ohlc/' + tf + '?symbol=' + encodeURIComponent(name) + '&page=' + page + '&limit=50')
+        el.innerHTML =
+            '<div class="table-scroll"><table class="ohlc-table"><thead><tr>' +
+            '<th>Symbol</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th>Time</th>' +
+            '</tr></thead><tbody></tbody></table></div>' +
+            '<div class="load-sentinel"></div>';
+        tfState[tf] = { page: 0, totalPages: 1, loading: false };
+    }
+
+    function loadOhlcPage(tf) {
+        var s = tfState[tf];
+        if (s.loading || s.page >= s.totalPages) return;
+        s.loading = true;
+        var nextPage = s.page + 1;
+
+        fetch('/api/ohlc/' + tf + '?symbol=' + encodeURIComponent(name) + '&page=' + nextPage + '&limit=50')
             .then(function (r) { return r.json(); })
             .then(function (res) {
-                tfCache[cacheKey] = res;
-                el.innerHTML = renderOhlcTable(res.data, res.pagination.page, res.pagination.total_pages);
+                s.page = res.pagination.page;
+                s.totalPages = res.pagination.total_pages;
+                s.loading = false;
+
+                var tbody = document.querySelector('#tab-' + tf + ' .ohlc-table tbody');
+                if (res.data.length === 0 && s.page === 1) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="range-empty">Tidak ada data.</td></tr>';
+                } else {
+                    tbody.insertAdjacentHTML('beforeend', buildRowsHtml(res.data));
+                }
+
+                if (s.page >= s.totalPages) {
+                    var sentinel = document.querySelector('#tab-' + tf + ' .load-sentinel');
+                    if (sentinel) sentinel.remove();
+                }
             })
             .catch(function () {
-                el.innerHTML = '<p class="range-empty">Tabel tidak tersedia.</p>';
+                s.loading = false;
+                var sentinel = document.querySelector('#tab-' + tf + ' .load-sentinel');
+                if (sentinel) sentinel.remove();
             });
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting && currentTf && currentTf !== 'details') {
+                loadOhlcPage(currentTf);
+            }
+        });
+    }, { root: document.getElementById('tab-content'), threshold: 0.1 });
+
+    function observeSentinel(tf) {
+        var sentinel = document.querySelector('#tab-' + tf + ' .load-sentinel');
+        if (sentinel) observer.observe(sentinel);
     }
 
     document.querySelectorAll('.tab').forEach(function (btn) {
@@ -88,20 +109,15 @@
             if (activePanel) activePanel.classList.remove('active');
             currentTf = tf;
             document.getElementById('tab-' + tf).classList.add('active');
+
             if (tf === 'details') {
                 loadDetails();
             } else {
-                loadOhlc(tf, 1);
+                if (!tfState[tf]) initOhlcTab(tf);
+                if (tfState[tf].page === 0) loadOhlcPage(tf);
+                observeSentinel(tf);
             }
         });
-    });
-
-    document.getElementById('tab-content').addEventListener('click', function (e) {
-        var btn = e.target.closest('.pg-btn');
-        if (!btn || btn.disabled || !currentTf) return;
-        var pg = parseInt(btn.getAttribute('data-pg'));
-        if (isNaN(pg) || pg < 1) return;
-        loadOhlc(currentTf, pg);
     });
 
     loadDetails();
