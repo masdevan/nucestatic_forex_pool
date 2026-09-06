@@ -298,7 +298,7 @@ h1 {
 #symbol-list li {
     font-size: 13px;
     color: #1f2937;
-    padding: 4px 8px;
+    padding: 8px 16px;
     border-radius: 6px;
     cursor: pointer;
     white-space: nowrap;

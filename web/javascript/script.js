@@ -47,6 +47,14 @@ async function loadSymbols() {
             container.appendChild(ul);
         });
         setTimeout(() => container.classList.remove('fading-in'), 400);
+        var active = container.querySelector('.symbol-link.active');
+        if (active) {
+            var sc = container.closest('.sidebar-container');
+            if (sc) {
+                var top = active.offsetTop - sc.offsetTop - sc.clientHeight / 2 + active.clientHeight / 2;
+                sc.scrollTop = Math.max(0, top);
+            }
+        }
     } catch (e) {
         container.innerHTML = '<li>Gagal memuat symbols</li>';
     }
