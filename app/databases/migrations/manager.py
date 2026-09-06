@@ -98,6 +98,59 @@ def drop_all_tables():
         conn.commit()
     print(f"Dropped {len(tables)} tables")
 
+def prompt_category_selection():
+    from app.databases.seeders.categories import CATEGORIES
+
+    names = list(CATEGORIES.keys())
+    print("\nSelect categories to seed (comma-separated):")
+    for i, name in enumerate(names, 1):
+        count = len(CATEGORIES[name])
+        print(f"  {i}. {name:<20} ({count} symbols)")
+    print(f"  {len(names) + 1}. All")
+
+    raw = input("\nChoice: ").strip()
+    if not raw:
+        print("No selection. Aborting.")
+        return None
+
+    choices = [c.strip() for c in raw.split(",")]
+    all_nums = list(range(1, len(names) + 1))
+
+    if str(len(names) + 1) in choices:
+        selected = []
+        for name in names:
+            selected.extend(CATEGORIES[name])
+        print(f"All categories selected ({len(selected)} symbols)")
+        return selected
+
+    selected = []
+    selected_names = []
+    for c in choices:
+        if c.isdigit():
+            idx = int(c) - 1
+            if 0 <= idx < len(names):
+                selected.extend(CATEGORIES[names[idx]])
+                selected_names.append(names[idx])
+
+    if not selected:
+        print("Invalid selection. Aborting.")
+        return None
+
+    print(f"Selected {len(selected)} symbols ({', '.join(selected_names)})")
+    return selected
+
+
+def seed_symbols_by_category(symbols):
+    from sqlalchemy import text as sql_text
+    with engine.begin() as conn:
+        for name in symbols:
+            conn.execute(sql_text(
+                "INSERT INTO symbols (server, name) VALUES (:server, :name) "
+                "ON DUPLICATE KEY UPDATE server = VALUES(server)"
+            ), {"server": "", "name": name})
+    print(f"Seeded {len(symbols)} symbols.")
+
+
 def migrate_fresh():
     print("Running fresh migration...")
     print("Dropping all tables...")
@@ -116,9 +169,31 @@ def migrate_fresh():
         conn.execute(text(f"INSERT INTO {TABLE_NAME} (version) VALUES (:version)"), {"version": "20260904_symbols"})
         conn.commit()
 
-    print("Seeding symbols...")
-    from app.databases.seeders.symbol_seeder import seed_symbols
-    seed_symbols()
+    selected = prompt_category_selection()
+    if not selected:
+        return
+
+    init_mt5 = False
+    try:
+        import MetaTrader5 as mt5
+        if mt5.initialize():
+            init_mt5 = True
+            account = mt5.account_info()
+            server = account.server if account else ""
+            mt5.shutdown()
+        else:
+            server = ""
+    except Exception:
+        server = ""
+
+    from sqlalchemy import text as sql_text
+    with engine.begin() as conn:
+        for name in selected:
+            conn.execute(sql_text(
+                "INSERT INTO symbols (server, name) VALUES (:server, :name) "
+                "ON DUPLICATE KEY UPDATE server = VALUES(server)"
+            ), {"server": server, "name": name})
+    print(f"Seeded {len(selected)} symbols.")
 
     run_migrations()
 
