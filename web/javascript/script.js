@@ -96,9 +96,19 @@ function initApiTester() {
         var url = '';
         if (currentEp === 'health') url = '/api/health';
         else if (currentEp === 'symbols') url = '/api/symbols';
-        else if (currentEp === 'range') {
+        else if (currentEp === 'range' || currentEp === 'date-range') {
             var sym = (document.getElementById('p-symbol') || {}).value || 'EURUSDm';
-            url = '/api/symbols/' + encodeURIComponent(sym) + '/range';
+            url = '/api/symbols/' + encodeURIComponent(sym) + '/' + currentEp;
+            if (currentEp === 'date-range') {
+                var tf = (document.getElementById('p-timeframe') || {}).value || 'm1';
+                var sd = (document.getElementById('p-start') || {}).value || '';
+                var ed = (document.getElementById('p-end') || {}).value || '';
+                var lm = (document.getElementById('p-limit') || {}).value || '50';
+                url += '?timeframe=' + encodeURIComponent(tf);
+                if (sd) url += '&start_date=' + encodeURIComponent(sd.replace('T', ' '));
+                if (ed) url += '&end_date=' + encodeURIComponent(ed.replace('T', ' '));
+                url += '&limit=' + encodeURIComponent(lm);
+            }
         } else if (currentEp === 'ohlc') {
             var tf = (document.getElementById('p-timeframe') || {}).value || 'm1';
             var sym2 = (document.getElementById('p-symbol') || {}).value || 'EURUSDm';
@@ -111,8 +121,19 @@ function initApiTester() {
 
     function renderParams() {
         var html = '';
-        if (currentEp === 'range' || currentEp === 'ohlc') {
+        if (currentEp === 'range' || currentEp === 'ohlc' || currentEp === 'date-range') {
             html += '<div class="tester-row"><label>symbol</label><input id="p-symbol" value="EURUSDm"></div>';
+        }
+        if (currentEp === 'ohlc' || currentEp === 'date-range') {
+            html += '<div class="tester-row"><label>timeframe</label><select id="p-timeframe">' +
+                '<option>m1</option><option>m5</option><option>m15</option><option>m30</option>' +
+                '<option>h1</option><option>h4</option><option>d1</option><option>w1</option><option>mn1</option>' +
+                '</select></div>';
+        }
+        if (currentEp === 'date-range') {
+            html += '<div class="tester-row"><label>start_date</label><input id="p-start" type="datetime-local"></div>';
+            html += '<div class="tester-row"><label>end_date</label><input id="p-end" type="datetime-local"></div>';
+            html += '<div class="tester-row"><label>limit</label><input id="p-limit" type="number" value="50" min="1" max="1000"></div>';
         }
         if (currentEp === 'ohlc') {
             html += '<div class="tester-row"><label>timeframe</label><select id="p-timeframe">' +

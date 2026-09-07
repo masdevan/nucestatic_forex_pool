@@ -60,6 +60,84 @@ async def symbol_range(symbol: str):
     finally:
         db.close()
 
+@app.get("/api/symbols/{symbol}/date-range")
+async def symbol_date_range(
+    symbol: str,
+    timeframe: str = "m1",
+    start_date: str = None,
+    end_date: str = None,
+    limit: int = 50
+):
+    from app.databases.config import SessionLocal
+    from sqlalchemy import text as sql_text
+    from datetime import datetime
+
+    tbl = f"ohlc_{symbol.lower()}_{timeframe.lower()}"
+    db = SessionLocal()
+    try:
+        check = db.execute(sql_text(
+            "SELECT COUNT(*) FROM information_schema.tables "
+            "WHERE table_schema = DATABASE() AND table_name = :tbl"
+        ), {"tbl": tbl}).scalar()
+        if not check:
+            return {"symbol": symbol, "timeframe": timeframe, "data": [], "total": 0}
+
+        where_clauses = ["symbol = :sym"]
+        params = {"sym": symbol}
+
+        if start_date:
+            for fmt in ("%Y-%m-%d %H:%M", "%Y-%m-%d"):
+                try:
+                    dt = datetime.strptime(start_date, fmt)
+                    where_clauses.append("time >= :start")
+                    params["start"] = int(dt.timestamp())
+                    break
+                except ValueError:
+                    continue
+        if end_date:
+            for fmt in ("%Y-%m-%d %H:%M", "%Y-%m-%d"):
+                try:
+                    dt = datetime.strptime(end_date, fmt)
+                    if fmt == "%Y-%m-%d":
+                        dt = dt.replace(hour=23, minute=59)
+                    where_clauses.append("time <= :end")
+                    params["end"] = int(dt.timestamp())
+                    break
+                except ValueError:
+                    continue
+
+        where_sql = " AND ".join(where_clauses)
+
+        rows = db.execute(sql_text(
+            f"SELECT symbol, open, high, low, close, time FROM `{tbl}` WHERE {where_sql} ORDER BY time ASC LIMIT {limit}"
+        ), params).fetchall()
+
+        total = db.execute(sql_text(
+            f"SELECT COUNT(*) FROM `{tbl}` WHERE {where_sql}"
+        ), params).scalar()
+
+        def fmt(v):
+            if isinstance(v, (int, float)):
+                return datetime.fromtimestamp(v).strftime("%Y-%m-%d %H:%M")
+            if hasattr(v, 'strftime'):
+                return v.strftime("%Y-%m-%d %H:%M")
+            return str(v) if v else None
+
+        data = []
+        for r in rows:
+            data.append({
+                "symbol": r[0],
+                "open": float(r[1]) if r[1] else None,
+                "high": float(r[2]) if r[2] else None,
+                "low": float(r[3]) if r[3] else None,
+                "close": float(r[4]) if r[4] else None,
+                "time": fmt(r[5])
+            })
+
+        return {"symbol": symbol, "timeframe": timeframe, "data": data, "total": total}
+    finally:
+        db.close()
+
 @app.get("/", include_in_schema=False)
 async def dashboard():
     return FileResponse(Path(__file__).parent / "web" / "index.html")
