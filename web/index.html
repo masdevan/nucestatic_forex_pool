@@ -59,7 +59,39 @@
         </aside>
 
         <main id="content">
-            <h1>dashboard</h1>
+            <div class="api-section">
+                <h2>Endpoints</h2>
+                <div class="api-endpoint-list">
+                    <div class="api-endpoint-item" data-ep="health">
+                        <span class="method get">GET</span>
+                        /api/health
+                        <span class="api-params-inline">-</span>
+                    </div>
+                    <div class="api-endpoint-item" data-ep="symbols">
+                        <span class="method get">GET</span>
+                        /api/symbols
+                        <span class="api-params-inline">-</span>
+                    </div>
+                    <div class="api-endpoint-item" data-ep="range">
+                        <span class="method get">GET</span>
+                        /api/symbols/{symbol}/range
+                        <span class="api-params-inline">symbol</span>
+                    </div>
+                    <div class="api-endpoint-item" data-ep="ohlc">
+                        <span class="method get">GET</span>
+                        /api/ohlc/{timeframe}
+                        <span class="api-params-inline">symbol, page, limit</span>
+                    </div>
+                </div>
+
+                <h2>Tester</h2>
+                <div class="tester-box">
+                    <div class="tester-url" id="api-url">-</div>
+                    <div id="api-params"></div>
+                    <button id="api-run" class="btn-run">Run</button>
+                    <div id="api-result" class="api-result"></div>
+                </div>
+            </div>
         </main>
     </div>
 

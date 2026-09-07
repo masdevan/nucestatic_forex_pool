@@ -79,7 +79,8 @@ body {
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     min-height: 0;
 }
 
@@ -254,6 +255,296 @@ h1 {
 
 .load-sentinel {
     height: 1px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+    width: 100%;
+}
+
+.stat-card {
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-server {
+    font-size: 13px;
+    color: #1f2937;
+    font-weight: bold;
+}
+
+.stat-count {
+    font-size: 20px;
+    color: #8b5e3c;
+    font-weight: bold;
+}
+
+.stat-total {
+    margin-top: 16px;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.api-list {
+    margin-top: 32px;
+    width: 100%;
+}
+
+.api-list h2 {
+    font-size: 16px;
+    color: #1f2937;
+    margin: 0 0 12px 0;
+}
+
+.about-section {
+    max-width: 640px;
+    width: 100%;
+}
+
+.about-section h1 {
+    font-size: 24px;
+    margin: 0 0 8px 0;
+}
+
+.about-section h2 {
+    font-size: 16px;
+    color: #1f2937;
+    margin: 20px 0 8px 0;
+}
+
+.about-section p {
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.6;
+    margin: 0 0 8px 0;
+}
+
+.about-section ol {
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.8;
+    margin: 0 0 8px 0;
+    padding-left: 20px;
+}
+
+.about-section pre {
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 13px;
+    overflow-x: auto;
+    margin: 0 0 8px 0;
+}
+
+.about-section code {
+    font-family: Consolas, monospace;
+}
+
+.about-section a {
+    color: #8b5e3c;
+    text-decoration: none;
+}
+
+.about-section a:hover {
+    text-decoration: underline;
+}
+
+.api-section {
+    width: 100%;
+}
+
+.api-section h2 {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 24px 0 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.api-section h2:first-child {
+    margin-top: 0;
+}
+
+.api-endpoint-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.api-endpoint-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    color: #111827;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.api-endpoint-item:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+
+.api-endpoint-item.active {
+    border-color: #8b5e3c;
+    background: #fef7f0;
+}
+
+.api-params-inline {
+    font-size: 12px;
+    color: #9ca3af;
+    margin-left: auto;
+}
+
+.tester-box {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.tester-row {
+    margin-bottom: 12px;
+}
+
+.tester-row label {
+    display: block;
+    font-size: 12px;
+    font-weight: bold;
+    color: #374151;
+    margin-bottom: 4px;
+}
+
+.tester-row input,
+.tester-row select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    box-sizing: border-box;
+    background: #ffffff;
+    color: #1f2937;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.tester-row input:focus,
+.tester-row select:focus {
+    border-color: #8b5e3c;
+}
+
+.tester-url {
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    color: #374151;
+    padding: 8px 10px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    word-break: break-all;
+}
+
+.btn-run {
+    padding: 8px 20px;
+    background: #8b5e3c;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.btn-run:hover {
+    background: #7a5232;
+}
+
+.api-result {
+    margin-top: 12px;
+    background: #f9fafb;
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 12px;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 400px;
+    overflow: auto;
+    display: none;
+}
+
+.api-result.loaded {
+    display: block;
+}
+
+.api-result.error {
+    display: block;
+    color: #f87171;
+    background: #1f2937;
+}
+
+.tester-loading {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.api-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    border-left: 1px solid #d1d5db;
+}
+
+.api-table th,
+.api-table td {
+    border: none;
+    border-right: 1px solid #d1d5db;
+    border-bottom: 1px solid #d1d5db;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.api-table th {
+    background-color: #f3f4f6;
+    color: #1f2937;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-top: 1px solid #d1d5db;
+}
+
+.method {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.method.get {
+    background-color: #22c55e;
 }
 
 .sidebar-container {
@@ -452,7 +743,7 @@ body.sidebar-open {
 
     #layout {
         gap: 0;
-        min-height: 100%;
+        height: 100%;
         padding-top: calc(8px + 45px + 8px);
         box-sizing: border-box;
     }
@@ -465,13 +756,32 @@ body.sidebar-open {
         box-sizing: border-box;
         align-items: flex-start;
         justify-content: flex-start;
-        overflow: hidden;
+        overflow-y: auto;
+        overflow-x: hidden;
         min-height: 0;
     }
 
     #tab-content {
         width: 100%;
         min-width: 0;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .api-list {
+        overflow-x: auto;
+    }
+
+    .api-table {
+        font-size: 12px;
+    }
+
+    .api-table td,
+    .api-table th {
+        white-space: nowrap;
+        padding: 6px 8px;
     }
 
     h1 {
