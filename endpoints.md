@@ -12,11 +12,12 @@
   - Returns data dari tabel symbol_ranges
   - Returns: { symbol, ranges: [{ timeframe, first, last, count }] }
 
-- GET /api/symbols/{symbol}/date-range?timeframe=m1&start_date=2024-01-01&end_date=2024-12-31
+- GET /api/symbols/{symbol}/date-range?timeframe=m1&start_date=2024-01-01&end_date=2024-12-31&limit=50
   - symbol: required
   - timeframe: default m1
-  - start_date: optional (format YYYY-MM-DD)
-  - end_date: optional (format YYYY-MM-DD)
+  - start_date: optional (format YYYY-MM-DD HH:MM)
+  - end_date: optional (format YYYY-MM-DD HH:MM)
+  - limit: default 50
   - Query ke tabel ohlc_{symbol}_{timeframe}
   - Returns: { symbol, timeframe, data: [{ symbol, open, high, low, close, time }], total }
 
@@ -30,6 +31,11 @@
   - limit: default 50, max 100
   - Query ke tabel dinamis: ohlc_{symbol}_{timeframe}
   - Returns: { data: [{ symbol, time, open, high, low, close }], pagination: { page, limit, total, total_pages, has_next, has_prev } }
+
+## Centrifugo
+- GET /api/centrifugo/token
+  - Generate JWT token untuk Centrifugo WebSocket
+  - Returns: { token, ws_url }
 
 ## Pages
 - GET / — Dashboard

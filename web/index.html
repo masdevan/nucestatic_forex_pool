@@ -96,10 +96,37 @@
                     <button id="api-run" class="btn-run">Run</button>
                     <div id="api-result" class="api-result"></div>
                 </div>
+
+                <h2>WebSocket</h2>
+                <div class="ws-section">
+                    <div class="ws-header">
+                        <span id="ws-status" class="ws-badge ws-disconnected">Disconnected</span>
+                        <button id="ws-connect" class="btn-run">Connect</button>
+                    </div>
+                    <div class="ws-sub-label">Active: <span id="active-subs">None</span></div>
+                    <div class="tester-box">
+                        <div class="tester-row">
+                            <label>Channel</label>
+                            <input id="ws-channel" value="trade:EURUSDm" placeholder="trade:EURUSDm">
+                        </div>
+                        <div class="ws-actions">
+                            <button id="ws-sub-btn" class="btn-run">Subscribe</button>
+                            <button id="ws-unsub-btn" class="btn-unsub">Unsubscribe</button>
+                        </div>
+                    </div>
+                    <div id="ws-result" class="api-result"></div>
+                    <div id="ws-publish-section" class="tester-box" style="display:none">
+                        <h3>Publish ke <span id="ws-pub-channel"></span></h3>
+                        <textarea id="ws-pub-input" class="ws-pub-input" rows="8"></textarea>
+                        <button id="ws-pub-btn" class="btn-run" style="margin-top:8px">Publish</button>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
+    <script src="https://unpkg.com/centrifuge@5.7.0/dist/centrifuge.js"></script>
     <script src="/javascript/script.js"></script>
+    <script src="/javascript/centrifugo.js"></script>
 </body>
 </html>

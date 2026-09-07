@@ -547,6 +547,148 @@ h1 {
     background-color: #22c55e;
 }
 
+.ws-section {
+    margin-top: 16px;
+}
+
+.ws-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.ws-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    font-family: Consolas, monospace;
+}
+
+.ws-connected {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.ws-disconnected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.ws-sub-label {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 16px;
+}
+
+.ws-sub-label span {
+    color: #1f2937;
+    font-weight: bold;
+}
+
+.symbol-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+    max-height: 120px;
+    overflow-y: auto;
+    padding: 8px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+}
+
+.sym-check {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-family: Consolas, monospace;
+    color: #374151;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.sym-check input[type="checkbox"] {
+    accent-color: #8b5e3c;
+}
+
+.ws-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.btn-unsub {
+    padding: 6px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #374151;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.btn-unsub:hover {
+    background: #f3f4f6;
+}
+
+.ws-entry {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.ws-entry:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.ws-entry pre {
+    margin: 0;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    white-space: pre-wrap;
+    color: #1f2937;
+}
+
+.ws-channel {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: bold;
+    color: #8b5e3c;
+    background: #f3f4f6;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+}
+
+#ws-publish-section {
+    margin-top: 16px;
+}
+
+.ws-pub-input {
+    width: 100%;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    padding: 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    resize: vertical;
+    box-sizing: border-box;
+    color: #1f2937;
+    background: #ffffff;
+}
+
+.ws-pub-input:focus {
+    outline: none;
+    border-color: #8b5e3c;
+}
+
 .sidebar-container {
     overflow: auto;
     width: auto;

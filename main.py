@@ -1,11 +1,14 @@
 import os
 from pathlib import Path
 import uvicorn
+import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from sqlalchemy import text
+from pydantic import BaseModel
+from typing import Any
 from app.api.routes.ohlc import router as ohlc_router
 from app.api.models.configs.mt5_config import init_mt5, shutdown_mt5, get_terminal_info
 
@@ -137,6 +140,35 @@ async def symbol_date_range(
         return {"symbol": symbol, "timeframe": timeframe, "data": data, "total": total}
     finally:
         db.close()
+
+@app.get("/api/centrifugo/token")
+async def centrifugo_token():
+    import jwt
+    from datetime import datetime, timedelta
+    secret = os.getenv("CENTRIFUGO_HMAC_SECRET", "")
+    payload = {
+        "sub": "dashboard",
+        "exp": datetime.utcnow() + timedelta(hours=24)
+    }
+    token = jwt.encode(payload, secret, algorithm="HS256")
+    return {"token": token, "ws_url": os.getenv("CENTRIFUGO_URL", "ws://localhost:8000/connection/websocket")}
+
+class PublishRequest(BaseModel):
+    channel: str
+    data: Any
+
+@app.post("/api/centrifugo/publish")
+async def centrifugo_publish(req: PublishRequest):
+    api_url = os.getenv("CENTRIFUGO_API_URL", "https://centrifugo.devan.my.id/api")
+    api_key = os.getenv("CENTRIFUGO_API_KEY", "")
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            api_url,
+            headers={"Authorization": f"apikey {api_key}"},
+            json={"method": "publish", "params": {"channel": req.channel, "data": req.data}},
+            timeout=5
+        )
+        return resp.json()
 
 @app.get("/", include_in_schema=False)
 async def dashboard():
