@@ -2,7 +2,7 @@
 
 ## Health
 - GET /api/health
-  - Returns: { status, mt5_connected }
+  - Returns: { status }
 
 ## Symbols
 - GET /api/symbols
