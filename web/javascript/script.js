@@ -60,10 +60,22 @@ async function loadSymbols() {
     }
 }
 
+function initThemeToggle() {
+    const toggle = document.getElementById('theme-toggle');
+    if (!toggle) return;
+    const stored = localStorage.getItem('theme');
+    if (stored === 'dark') document.body.classList.add('dark-mode');
+    toggle.addEventListener('click', () => {
+        const isDark = document.body.classList.toggle('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     loadSymbols();
     initSidebarToggle();
     initApiTester();
+    initThemeToggle();
 });
 
 function initSidebarToggle() {
