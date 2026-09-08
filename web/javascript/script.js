@@ -95,7 +95,10 @@ function initApiTester() {
     function updateUrl() {
         var url = '';
         if (currentEp === 'health') url = '/api/health';
-        else if (currentEp === 'symbols') url = '/api/symbols';
+        else if (currentEp === 'symbols') {
+            var srch = (document.getElementById('p-search') || {}).value || '';
+            url = '/api/symbols' + (srch ? '?search=' + encodeURIComponent(srch) : '');
+        }
         else if (currentEp === 'range' || currentEp === 'date-range') {
             var sym = (document.getElementById('p-symbol') || {}).value || 'EURUSDm';
             url = '/api/symbols/' + encodeURIComponent(sym) + '/' + currentEp;
@@ -121,6 +124,9 @@ function initApiTester() {
 
     function renderParams() {
         var html = '';
+        if (currentEp === 'symbols') {
+            html += '<div class="tester-row"><label>search</label><input id="p-search" placeholder="contoh: btc"></div>';
+        }
         if (currentEp === 'range' || currentEp === 'ohlc' || currentEp === 'date-range') {
             html += '<div class="tester-row"><label>symbol</label><input id="p-symbol" value="EURUSDm"></div>';
         }
