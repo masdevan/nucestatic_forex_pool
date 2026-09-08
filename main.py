@@ -5,7 +5,7 @@ import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from starlette.responses import Response, FileResponse
 from sqlalchemy import text
 from pydantic import BaseModel
 from typing import Any
@@ -189,9 +189,16 @@ async def dashboard():
 
 WEB = Path(__file__).parent / "web"
 PUBLIC = Path(__file__).parent / "public"
-app.mount("/css", StaticFiles(directory=WEB / "css"), name="css")
-app.mount("/javascript", StaticFiles(directory=WEB / "javascript"), name="javascript")
-app.mount("/public", StaticFiles(directory=PUBLIC), name="public")
+
+class NoCacheStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope):
+        response: Response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache, max-age=0, must-revalidate"
+        return response
+
+app.mount("/css", NoCacheStaticFiles(directory=WEB / "css"), name="css")
+app.mount("/javascript", NoCacheStaticFiles(directory=WEB / "javascript"), name="javascript")
+app.mount("/public", NoCacheStaticFiles(directory=PUBLIC), name="public")
 
 def serve_page(path: Path):
     html = path.read_text(encoding="utf-8").replace("{{BRAND}}", BRAND)
