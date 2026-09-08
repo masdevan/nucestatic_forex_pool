@@ -7,6 +7,8 @@
         if (!el) return;
         el.textContent = text;
         el.className = 'ws-badge ' + (connected ? 'ws-connected' : 'ws-disconnected');
+        var connectBtn = document.getElementById('ws-connect');
+        if (connectBtn) connectBtn.textContent = connected ? 'Disconnect' : 'Connect';
     }
 
     function appendResult(channel, data) {
