@@ -1272,15 +1272,15 @@ body.dark-mode ::-webkit-scrollbar-thumb:hover {
 body.dark-mode #header,
 body.dark-mode #sidebar,
 body.dark-mode #content,
-body.dark-mode .tester-box,
-body.dark-mode .ws-section {
+body.dark-mode .tester-box {
     background-color: #111111;
     border-color: #212121;
     color: #eeeeee;
 }
 
 body.dark-mode #content,
-body.dark-mode .api-section {
+body.dark-mode .api-section,
+body.dark-mode .ws-section {
     background-color: #090909;
 }
 
