@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{BRAND}}</title>
-    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/styles.css?v=4">
     <link rel="icon" type="image/png" href="/public/favicon/favicon-96x96.png">
     <link rel="icon" type="image/svg+xml" href="/public/favicon/favicon.svg">
     <link rel="apple-touch-icon" href="/public/favicon/apple-touch-icon.png">
@@ -23,8 +23,10 @@
                     <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/>
                 </svg>
             </a>
-            <img src="/public/logo.png" class="header-logo" alt="Logo">
-            <span class="brand">{{BRAND}}</span>
+            <a href="/" class="header-brand">
+                <img src="/public/logo.png" class="header-logo" alt="Logo">
+                <span class="brand">{{BRAND}}</span>
+            </a>
         </div>
         <div class="header-right">
             <button id="theme-toggle" class="theme-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">

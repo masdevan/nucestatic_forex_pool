@@ -71,11 +71,33 @@ function initThemeToggle() {
     });
 }
 
+function initWelcomeModal() {
+    var overlay = document.getElementById('welcome-modal');
+    if (!overlay) return;
+    var close = function () {
+        overlay.classList.add('closing');
+        overlay.addEventListener('animationend', function () {
+            overlay.hidden = true;
+            overlay.classList.remove('closing', 'open');
+        }, { once: true });
+    };
+    overlay.querySelector('.welcome-close').addEventListener('click', close);
+    overlay.querySelector('.welcome-cta').addEventListener('click', close);
+    overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) close();
+    });
+    overlay.hidden = false;
+    requestAnimationFrame(function () {
+        overlay.classList.add('open');
+    });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     loadSymbols();
     initSidebarToggle();
     initApiTester();
     initThemeToggle();
+    initWelcomeModal();
 });
 
 function initSidebarToggle() {
