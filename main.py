@@ -184,7 +184,7 @@ async def symbol_page(name: str, server: str):
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    # shutdown_mt5()
+    pass
 
 if __name__ == "__main__":
     uvicorn.run(
