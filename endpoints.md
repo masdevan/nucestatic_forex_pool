@@ -5,7 +5,8 @@
   - Returns: { status }
 
 ## Symbols
-- GET /api/symbols
+- GET /api/symbols?search={query}
+  - search: optional, filter nama symbol (LIKE)
   - Returns: { symbols: [{ server, name }] }
 
 - GET /api/symbols/{symbol}/range

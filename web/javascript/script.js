@@ -60,10 +60,44 @@ async function loadSymbols() {
     }
 }
 
+function initThemeToggle() {
+    const toggle = document.getElementById('theme-toggle');
+    if (!toggle) return;
+    const stored = localStorage.getItem('theme');
+    if (stored === 'dark') document.body.classList.add('dark-mode');
+    toggle.addEventListener('click', () => {
+        const isDark = document.body.classList.toggle('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+}
+
+function initWelcomeModal() {
+    var overlay = document.getElementById('welcome-modal');
+    if (!overlay) return;
+    var close = function () {
+        overlay.classList.add('closing');
+        overlay.addEventListener('animationend', function () {
+            overlay.hidden = true;
+            overlay.classList.remove('closing', 'open');
+        }, { once: true });
+    };
+    overlay.querySelector('.welcome-close').addEventListener('click', close);
+    overlay.querySelector('.welcome-cta').addEventListener('click', close);
+    overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) close();
+    });
+    overlay.hidden = false;
+    requestAnimationFrame(function () {
+        overlay.classList.add('open');
+    });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     loadSymbols();
     initSidebarToggle();
     initApiTester();
+    initThemeToggle();
+    initWelcomeModal();
 });
 
 function initSidebarToggle() {
@@ -95,7 +129,10 @@ function initApiTester() {
     function updateUrl() {
         var url = '';
         if (currentEp === 'health') url = '/api/health';
-        else if (currentEp === 'symbols') url = '/api/symbols';
+        else if (currentEp === 'symbols') {
+            var srch = (document.getElementById('p-search') || {}).value || '';
+            url = '/api/symbols' + (srch ? '?search=' + encodeURIComponent(srch) : '');
+        }
         else if (currentEp === 'range' || currentEp === 'date-range') {
             var sym = (document.getElementById('p-symbol') || {}).value || 'EURUSDm';
             url = '/api/symbols/' + encodeURIComponent(sym) + '/' + currentEp;
@@ -121,6 +158,9 @@ function initApiTester() {
 
     function renderParams() {
         var html = '';
+        if (currentEp === 'symbols') {
+            html += '<div class="tester-row"><label>search</label><input id="p-search" placeholder="contoh: btc"></div>';
+        }
         if (currentEp === 'range' || currentEp === 'ohlc' || currentEp === 'date-range') {
             html += '<div class="tester-row"><label>symbol</label><input id="p-symbol" value="EURUSDm"></div>';
         }

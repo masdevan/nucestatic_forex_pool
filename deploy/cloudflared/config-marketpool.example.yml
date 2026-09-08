@@ -1,7 +1,0 @@
-tunnel: <TUNNEL_ID>
-credentials-file: /root/.cloudflared/<TUNNEL_ID>.json
-
-ingress:
-  - hostname: marketpool.devan.my.id
-    service: http://localhost:8765
-  - service: http_status:404

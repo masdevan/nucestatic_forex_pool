@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <link rel="stylesheet" href="/css/styles.css">
+    <title>{{BRAND}}</title>
+    <link rel="stylesheet" href="/css/styles.css?v=4">
+    <link rel="icon" type="image/png" href="/public/favicon/favicon-96x96.png">
+    <link rel="icon" type="image/svg+xml" href="/public/favicon/favicon.svg">
+    <link rel="apple-touch-icon" href="/public/favicon/apple-touch-icon.png">
+    <link rel="manifest" href="/public/favicon/site.webmanifest">
 </head>
 <body>
     <header id="header">
@@ -19,7 +23,24 @@
                     <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/>
                 </svg>
             </a>
-            <span class="brand">MARKET POOL</span>
+            <a href="/" class="header-brand">
+                <img src="/public/logo.png" class="header-logo" alt="Logo">
+                <span class="brand">{{BRAND}}</span>
+            </a>
+        </div>
+        <div class="header-right">
+            <button id="theme-toggle" class="theme-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+                <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+                <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+            </button>
         </div>
     </header>
 
@@ -69,8 +90,8 @@
                     </div>
                     <div class="api-endpoint-item" data-ep="symbols">
                         <span class="method get">GET</span>
-                        /api/symbols
-                        <span class="api-params-inline">-</span>
+                        /api/symbols?search={query}
+                        <span class="api-params-inline">search</span>
                     </div>
                     <div class="api-endpoint-item" data-ep="range">
                         <span class="method get">GET</span>
@@ -123,6 +144,22 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <div id="welcome-modal" class="welcome-overlay" hidden>
+        <div class="welcome-modal">
+            <button class="welcome-close" aria-label="Close">&times;</button>
+            <img class="welcome-img" src="/public/logo.png" alt="{{BRAND}}">
+            <h2>Welcome to <span>{{BRAND}}</span></h2>
+            <p class="welcome-sub">A market monitoring platform delivering candlestick (OHLC) data in one screen. No installation, no hassle - access it from anywhere.</p>
+            <div class="welcome-features">
+                <div class="welcome-feature"><span class="wf-check">&#10003;</span><div><strong>Hundreds of instruments</strong><br>Forex, crypto, indices, metals, commodities, and stocks.</div></div>
+                <div class="welcome-feature"><span class="wf-check">&#10003;</span><div><strong>9 timeframes</strong><br>From M1 to MN1 for your technical analysis.</div></div>
+            </div>
+            <div class="welcome-cta-row">
+                <button class="welcome-cta">Explore Now</button>
+            </div>
+        </div>
     </div>
 
     <script src="https://unpkg.com/centrifuge@5.7.0/dist/centrifuge.js"></script>

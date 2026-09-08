@@ -15,17 +15,23 @@ from app.api.routes.ohlc import router as ohlc_router
 load_dotenv()
 
 PORT = int(os.getenv("PORT", "8765"))
-
-# if not init_mt5():
-#     print("MT5 initialization failed")
-# else:
-#     print("MT5 initialized successfully")
+CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
 
 app = FastAPI(
     title="FOREXPOOL",
     description="API for forex market data dashboard",
     version="1.0.0"
 )
+
+if CORS_ORIGINS:
+    from fastapi.middleware.cors import CORSMiddleware
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=CORS_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 app.include_router(ohlc_router, prefix="/api/ohlc", tags=["OHLC"])
 
@@ -38,11 +44,16 @@ async def health_check():
     }
 
 @app.get("/api/symbols")
-async def symbols():
+async def symbols(search: str = None):
     from app.databases.config import SessionLocal
     db = SessionLocal()
     try:
-        rows = db.execute(text("SELECT server, name FROM symbols ORDER BY name ASC")).fetchall()
+        if search:
+            rows = db.execute(text(
+                "SELECT server, name FROM symbols WHERE name LIKE :q ORDER BY name ASC"
+            ), {"q": f"%{search}%"}).fetchall()
+        else:
+            rows = db.execute(text("SELECT server, name FROM symbols ORDER BY name ASC")).fetchall()
         return {"symbols": [{"server": r[0], "name": r[1]} for r in rows]}
     finally:
         db.close()
@@ -170,17 +181,26 @@ async def centrifugo_publish(req: PublishRequest):
         )
         return resp.json()
 
+BRAND = os.getenv("NAME", "MARKET POOL")
+
 @app.get("/", include_in_schema=False)
 async def dashboard():
-    return FileResponse(Path(__file__).parent / "web" / "index.html")
+    return serve_page(WEB / "index.html")
 
 WEB = Path(__file__).parent / "web"
+PUBLIC = Path(__file__).parent / "public"
 app.mount("/css", StaticFiles(directory=WEB / "css"), name="css")
 app.mount("/javascript", StaticFiles(directory=WEB / "javascript"), name="javascript")
+app.mount("/public", StaticFiles(directory=PUBLIC), name="public")
+
+def serve_page(path: Path):
+    html = path.read_text(encoding="utf-8").replace("{{BRAND}}", BRAND)
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(html)
 
 @app.get("/{name}/{server}", include_in_schema=False)
 async def symbol_page(name: str, server: str):
-    return FileResponse(WEB / "symbol.html")
+    return serve_page(WEB / "symbol.html")
 
 @app.on_event("shutdown")
 async def shutdown_event():
