@@ -78,6 +78,11 @@ body:not(.dark-mode) .icon-sun { display: none; }
     text-decoration: none;
 }
 
+.header-logo {
+    height: 26px;
+    width: auto;
+}
+
 .home-icon {
     width: 20px;
     height: 20px;

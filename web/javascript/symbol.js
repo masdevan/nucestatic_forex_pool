@@ -3,6 +3,9 @@
     if (parts.length < 2) return;
 
     var name = decodeURIComponent(parts[0]);
+    var server = decodeURIComponent(parts[1]);
+    var brand = (document.querySelector('.brand') || {}).textContent || 'MARKET POOL';
+    document.title = name + ' - ' + server + ' | ' + brand;
     var currentTf = null;
     var tfState = {};
 

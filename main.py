@@ -181,17 +181,26 @@ async def centrifugo_publish(req: PublishRequest):
         )
         return resp.json()
 
+BRAND = os.getenv("NAME", "MARKET POOL")
+
 @app.get("/", include_in_schema=False)
 async def dashboard():
-    return FileResponse(Path(__file__).parent / "web" / "index.html")
+    return serve_page(WEB / "index.html")
 
 WEB = Path(__file__).parent / "web"
+PUBLIC = Path(__file__).parent / "public"
 app.mount("/css", StaticFiles(directory=WEB / "css"), name="css")
 app.mount("/javascript", StaticFiles(directory=WEB / "javascript"), name="javascript")
+app.mount("/public", StaticFiles(directory=PUBLIC), name="public")
+
+def serve_page(path: Path):
+    html = path.read_text(encoding="utf-8").replace("{{BRAND}}", BRAND)
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(html)
 
 @app.get("/{name}/{server}", include_in_schema=False)
 async def symbol_page(name: str, server: str):
-    return FileResponse(WEB / "symbol.html")
+    return serve_page(WEB / "symbol.html")
 
 @app.on_event("shutdown")
 async def shutdown_event():
