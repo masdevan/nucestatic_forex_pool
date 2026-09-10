@@ -2,13 +2,8 @@
 fastapi
 uvicorn[standard]
 pydantic
-pydantic-settings
 python-dotenv
 httpx
 sqlalchemy
 pymysql
-ollama
-requests
-pytz
-tzdata
 PyJWT
