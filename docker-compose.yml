@@ -1,0 +1,52 @@
+name: forexpool
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: forexpool-db
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --innodb-buffer-pool-size=512M
+      - --innodb-log-buffer-size=64M
+      - --max-connections=100
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-forexpool}
+      MYSQL_USER: ${MYSQL_USER:-forexpool}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env}
+      TZ: Asia/Jakarta
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    networks:
+      - backend
+
+  app:
+    build: .
+    container_name: forexpool-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MYSQL_HOST: db
+      MYSQL_PORT: "3306"
+    ports:
+      - "127.0.0.1:8765:8765"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend
+
+volumes:
+  db_data:
+
+networks:
+  backend:
