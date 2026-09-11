@@ -131,7 +131,11 @@ function initApiTester() {
         if (currentEp === 'health') url = '/api/health';
         else if (currentEp === 'symbols') {
             var srch = (document.getElementById('p-search') || {}).value || '';
-            url = '/api/symbols' + (srch ? '?search=' + encodeURIComponent(srch) : '');
+            var lm = (document.getElementById('p-limit') || {}).value || '50';
+            var pg = (document.getElementById('p-page') || {}).value || '1';
+            url = '/api/symbols';
+            if (srch) url += '?search=' + encodeURIComponent(srch);
+            url += (srch ? '&' : '?') + 'limit=' + encodeURIComponent(lm) + '&page=' + encodeURIComponent(pg);
         }
         else if (currentEp === 'range') {
             var sym = (document.getElementById('p-symbol') || {}).value || 'EURUSDm';
@@ -156,6 +160,8 @@ function initApiTester() {
         var html = '';
         if (currentEp === 'symbols') {
             html += '<div class="tester-row"><label>search</label><input id="p-search" placeholder="contoh: btc"></div>';
+            html += '<div class="tester-row"><label>limit</label><input id="p-limit" type="number" value="50" min="1" max="1000"></div>';
+            html += '<div class="tester-row"><label>page</label><input id="p-page" type="number" value="1" min="1"></div>';
         }
         if (currentEp === 'range' || currentEp === 'ohlc') {
             html += '<div class="tester-row"><label>symbol</label><input id="p-symbol" value="EURUSDm"></div>';

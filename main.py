@@ -41,17 +41,35 @@ async def health_check():
     }
 
 @app.get("/api/symbols")
-async def symbols(search: str = None):
+async def symbols(search: str = None, limit: int = Query(50, ge=1, le=1000), page: int = Query(1, ge=1)):
+    from math import ceil
     from app.databases.config import SessionLocal
     db = SessionLocal()
     try:
+        where = ""
+        params = {}
         if search:
-            rows = db.execute(text(
-                "SELECT server, name FROM symbols WHERE name LIKE :q ORDER BY name ASC"
-            ), {"q": f"%{search}%"}).fetchall()
-        else:
-            rows = db.execute(text("SELECT server, name FROM symbols ORDER BY name ASC")).fetchall()
-        return {"symbols": [{"server": r[0], "name": r[1]} for r in rows]}
+            where = " WHERE name LIKE :q"
+            params["q"] = f"%{search}%"
+        rows = db.execute(text(
+            f"SELECT server, name FROM symbols{where} ORDER BY name ASC LIMIT {limit} OFFSET {(page - 1) * limit}"
+        ), params).fetchall()
+        total = db.execute(text(
+            f"SELECT COUNT(*) FROM symbols{where}"
+        ), params).scalar()
+        total_pages = ceil(total / limit) if total > 0 else 1
+        return {
+            "symbols": [{"server": r[0], "name": r[1]} for r in rows],
+            "total": total,
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total": total,
+                "total_pages": total_pages,
+                "has_next": page * limit < total,
+                "has_prev": page > 1
+            }
+        }
     finally:
         db.close()
 

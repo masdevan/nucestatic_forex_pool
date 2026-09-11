@@ -5,9 +5,11 @@
   - Returns: { status }
 
 ## Symbols
-- GET /api/symbols?search={query}
+- GET /api/symbols?search={query}&limit=50&page=1
   - search: optional, filter nama symbol (LIKE)
-  - Returns: { symbols: [{ server, name }] }
+  - limit: default 50, max 1000
+  - page: default 1
+  - Returns: { symbols: [{ server, name }], total, pagination: { page, limit, total, total_pages, has_next, has_prev } }
 
 - GET /api/symbols/{symbol}/range
   - Returns data dari tabel symbol_ranges
