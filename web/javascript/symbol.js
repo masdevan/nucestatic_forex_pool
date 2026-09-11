@@ -85,7 +85,7 @@
         s.loading = true;
         var nextPage = s.page + 1;
 
-        fetch('/api/ohlc/' + tf + '?symbol=' + encodeURIComponent(name) + '&page=' + nextPage + '&limit=50')
+        fetch('/api/ohlc/' + encodeURIComponent(name) + '?timeframe=' + tf + '&page=' + nextPage + '&limit=50')
             .then(function (r) { return r.json(); })
             .then(function (res) {
                 s.page = res.pagination.page;

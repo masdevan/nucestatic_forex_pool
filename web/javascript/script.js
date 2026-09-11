@@ -133,25 +133,19 @@ function initApiTester() {
             var srch = (document.getElementById('p-search') || {}).value || '';
             url = '/api/symbols' + (srch ? '?search=' + encodeURIComponent(srch) : '');
         }
-        else if (currentEp === 'range' || currentEp === 'date-range') {
+        else if (currentEp === 'range') {
             var sym = (document.getElementById('p-symbol') || {}).value || 'EURUSDm';
-            url = '/api/symbols/' + encodeURIComponent(sym) + '/' + currentEp;
-            if (currentEp === 'date-range') {
-                var tf = (document.getElementById('p-timeframe') || {}).value || 'm1';
-                var sd = (document.getElementById('p-start') || {}).value || '';
-                var ed = (document.getElementById('p-end') || {}).value || '';
-                var lm = (document.getElementById('p-limit') || {}).value || '50';
-                url += '?timeframe=' + encodeURIComponent(tf);
-                if (sd) url += '&start_date=' + encodeURIComponent(sd.replace('T', ' '));
-                if (ed) url += '&end_date=' + encodeURIComponent(ed.replace('T', ' '));
-                url += '&limit=' + encodeURIComponent(lm);
-            }
+            url = '/api/symbols/' + encodeURIComponent(sym) + '/range';
         } else if (currentEp === 'ohlc') {
-            var tf = (document.getElementById('p-timeframe') || {}).value || 'm1';
             var sym2 = (document.getElementById('p-symbol') || {}).value || 'EURUSDm';
-            var pg = (document.getElementById('p-page') || {}).value || '1';
+            var tf = (document.getElementById('p-timeframe') || {}).value || 'm1';
+            var sd = (document.getElementById('p-start') || {}).value || '';
+            var ed = (document.getElementById('p-end') || {}).value || '';
             var lm = (document.getElementById('p-limit') || {}).value || '50';
-            url = '/api/ohlc/' + tf + '?symbol=' + encodeURIComponent(sym2) + '&page=' + pg + '&limit=' + lm;
+            url = '/api/ohlc/' + encodeURIComponent(sym2) + '?timeframe=' + encodeURIComponent(tf);
+            if (sd) url += '&start_date=' + encodeURIComponent(sd.replace('T', ' '));
+            if (ed) url += '&end_date=' + encodeURIComponent(ed.replace('T', ' '));
+            url += '&limit=' + encodeURIComponent(lm);
         }
         urlDiv.textContent = url || '-';
     }
@@ -161,27 +155,17 @@ function initApiTester() {
         if (currentEp === 'symbols') {
             html += '<div class="tester-row"><label>search</label><input id="p-search" placeholder="contoh: btc"></div>';
         }
-        if (currentEp === 'range' || currentEp === 'ohlc' || currentEp === 'date-range') {
+        if (currentEp === 'range' || currentEp === 'ohlc') {
             html += '<div class="tester-row"><label>symbol</label><input id="p-symbol" value="EURUSDm"></div>';
-        }
-        if (currentEp === 'ohlc' || currentEp === 'date-range') {
-            html += '<div class="tester-row"><label>timeframe</label><select id="p-timeframe">' +
-                '<option>m1</option><option>m5</option><option>m15</option><option>m30</option>' +
-                '<option>h1</option><option>h4</option><option>d1</option><option>w1</option><option>mn1</option>' +
-                '</select></div>';
-        }
-        if (currentEp === 'date-range') {
-            html += '<div class="tester-row"><label>start_date</label><input id="p-start" type="datetime-local"></div>';
-            html += '<div class="tester-row"><label>end_date</label><input id="p-end" type="datetime-local"></div>';
-            html += '<div class="tester-row"><label>limit</label><input id="p-limit" type="number" value="50" min="1" max="1000"></div>';
         }
         if (currentEp === 'ohlc') {
             html += '<div class="tester-row"><label>timeframe</label><select id="p-timeframe">' +
                 '<option>m1</option><option>m5</option><option>m15</option><option>m30</option>' +
                 '<option>h1</option><option>h4</option><option>d1</option><option>w1</option><option>mn1</option>' +
                 '</select></div>';
-            html += '<div class="tester-row"><label>page</label><input id="p-page" type="number" value="1" min="1"></div>';
-            html += '<div class="tester-row"><label>limit</label><input id="p-limit" type="number" value="50" min="1" max="100"></div>';
+            html += '<div class="tester-row"><label>start_date</label><input id="p-start" type="datetime-local"></div>';
+            html += '<div class="tester-row"><label>end_date</label><input id="p-end" type="datetime-local"></div>';
+            html += '<div class="tester-row"><label>limit</label><input id="p-limit" type="number" value="50" min="1" max="1000"></div>';
         }
         paramsDiv.innerHTML = html;
         updateUrl();

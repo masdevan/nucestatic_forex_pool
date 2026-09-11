@@ -3,13 +3,12 @@ from pathlib import Path
 import uvicorn
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import Response, FileResponse
 from sqlalchemy import text
 from pydantic import BaseModel
 from typing import Any
-from app.api.routes.ohlc import router as ohlc_router
 # from app.api.models.configs.mt5_config import init_mt5, shutdown_mt5, get_terminal_info
 
 load_dotenv()
@@ -32,8 +31,6 @@ if CORS_ORIGINS:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
-app.include_router(ohlc_router, prefix="/api/ohlc", tags=["OHLC"])
 
 @app.get("/api/health")
 async def health_check():
@@ -74,14 +71,16 @@ async def symbol_range(symbol: str):
     finally:
         db.close()
 
-@app.get("/api/symbols/{symbol}/date-range")
-async def symbol_date_range(
+@app.get("/api/ohlc/{symbol}")
+async def symbol_ohlc(
     symbol: str,
-    timeframe: str = "m1",
-    start_date: str = None,
-    end_date: str = None,
-    limit: int = 50
+    timeframe: str = Query("m1"),
+    start_date: str = Query(None),
+    end_date: str = Query(None),
+    limit: int = Query(50, ge=1, le=1000),
+    page: int = Query(1, ge=1)
 ):
+    from math import ceil
     from app.databases.config import SessionLocal
     from sqlalchemy import text as sql_text
     from datetime import datetime
@@ -94,7 +93,9 @@ async def symbol_date_range(
             "WHERE table_schema = DATABASE() AND table_name = :tbl"
         ), {"tbl": tbl}).scalar()
         if not check:
-            return {"symbol": symbol, "timeframe": timeframe, "data": [], "total": 0}
+            return {"symbol": symbol, "timeframe": timeframe, "data": [], "total": 0, "pagination": {
+                "page": 1, "limit": limit, "total": 0, "total_pages": 1, "has_next": False, "has_prev": False
+            }}
 
         where_clauses = ["symbol = :sym"]
         params = {"sym": symbol}
@@ -123,7 +124,7 @@ async def symbol_date_range(
         where_sql = " AND ".join(where_clauses)
 
         rows = db.execute(sql_text(
-            f"SELECT symbol, open, high, low, close, time FROM `{tbl}` WHERE {where_sql} ORDER BY time ASC LIMIT {limit}"
+            f"SELECT symbol, open, high, low, close, time FROM `{tbl}` WHERE {where_sql} ORDER BY time ASC LIMIT {limit} OFFSET {(page - 1) * limit}"
         ), params).fetchall()
 
         total = db.execute(sql_text(
@@ -148,7 +149,21 @@ async def symbol_date_range(
                 "time": fmt(r[5])
             })
 
-        return {"symbol": symbol, "timeframe": timeframe, "data": data, "total": total}
+        total_pages = ceil(total / limit) if total > 0 else 1
+        return {
+            "symbol": symbol,
+            "timeframe": timeframe,
+            "data": data,
+            "total": total,
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total": total,
+                "total_pages": total_pages,
+                "has_next": page * limit < total,
+                "has_prev": page > 1
+            }
+        }
     finally:
         db.close()
 

@@ -98,15 +98,10 @@
                         /api/symbols/{symbol}/range
                         <span class="api-params-inline">symbol</span>
                     </div>
-                    <div class="api-endpoint-item" data-ep="date-range">
-                        <span class="method get">GET</span>
-                        /api/symbols/{symbol}/date-range
-                        <span class="api-params-inline">symbol</span>
-                    </div>
                     <div class="api-endpoint-item" data-ep="ohlc">
                         <span class="method get">GET</span>
-                        /api/ohlc/{timeframe}
-                        <span class="api-params-inline">symbol, page, limit</span>
+                        /api/ohlc/{symbol}?timeframe=m1&start_date=2026-01-01&end_date=2026-01-02&limit=50
+                        <span class="api-params-inline">symbol, timeframe, start_date, end_date, limit</span>
                     </div>
                 </div>
 
