@@ -1032,6 +1032,7 @@ body.sidebar-open {
 body.dark-mode {
     background-color: #090909;
     color: #eeeeee;
+    color-scheme: dark;
 }
 
 .welcome-overlay {
