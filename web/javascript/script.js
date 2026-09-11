@@ -142,10 +142,12 @@ function initApiTester() {
             var sd = (document.getElementById('p-start') || {}).value || '';
             var ed = (document.getElementById('p-end') || {}).value || '';
             var lm = (document.getElementById('p-limit') || {}).value || '50';
+            var pg = (document.getElementById('p-page') || {}).value || '1';
             url = '/api/ohlc/' + encodeURIComponent(sym2) + '?timeframe=' + encodeURIComponent(tf);
             if (sd) url += '&start_date=' + encodeURIComponent(sd.replace('T', ' '));
             if (ed) url += '&end_date=' + encodeURIComponent(ed.replace('T', ' '));
             url += '&limit=' + encodeURIComponent(lm);
+            url += '&page=' + encodeURIComponent(pg);
         }
         urlDiv.textContent = url || '-';
     }
@@ -166,6 +168,7 @@ function initApiTester() {
             html += '<div class="tester-row"><label>start_date</label><input id="p-start" type="datetime-local"></div>';
             html += '<div class="tester-row"><label>end_date</label><input id="p-end" type="datetime-local"></div>';
             html += '<div class="tester-row"><label>limit</label><input id="p-limit" type="number" value="50" min="1" max="1000"></div>';
+            html += '<div class="tester-row"><label>page</label><input id="p-page" type="number" value="1" min="1"></div>';
         }
         paramsDiv.innerHTML = html;
         updateUrl();
