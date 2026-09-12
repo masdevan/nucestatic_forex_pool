@@ -76,32 +76,36 @@
     function initOhlcTab(tf) {
         var el = document.getElementById('tab-' + tf);
         el.innerHTML = skeletonOhlc() + '<div class="load-sentinel"></div>';
-        tfState[tf] = { page: 0, totalPages: 1, loading: false };
+        tfState[tf] = { cursor: null, done: false, started: false, loading: false };
     }
 
     function loadOhlcPage(tf) {
         var s = tfState[tf];
-        if (s.loading || s.page >= s.totalPages) return;
+        if (s.loading || s.done) return;
         s.loading = true;
-        var nextPage = s.page + 1;
+        s.started = true;
 
-        fetch('/api/ohlc/' + encodeURIComponent(name) + '?timeframe=' + tf + '&page=' + nextPage + '&limit=50')
+        var url = '/api/ohlc/' + encodeURIComponent(name) + '?timeframe=' + tf + '&limit=50';
+        if (s.cursor !== null) url += '&cursor=' + s.cursor;
+
+        fetch(url)
             .then(function (r) { return r.json(); })
             .then(function (res) {
-                s.page = res.pagination.page;
-                s.totalPages = res.pagination.total_pages;
+                var first = s.cursor === null;
                 s.loading = false;
+                s.done = s.done || !res.has_next || res.data.length === 0;
+                s.cursor = res.next_cursor;
 
                 var tbody = document.querySelector('#tab-' + tf + ' .ohlc-table tbody');
-                if (res.data.length === 0 && s.page === 1) {
+                if (res.data.length === 0 && first) {
                     tbody.innerHTML = '<tr><td colspan="6" class="range-empty">Tidak ada data.</td></tr>';
-                } else if (s.page === 1) {
+                } else if (first) {
                     tbody.innerHTML = buildRowsHtml(res.data);
                 } else {
                     tbody.insertAdjacentHTML('beforeend', buildRowsHtml(res.data));
                 }
 
-                if (s.page >= s.totalPages) {
+                if (s.done) {
                     var sentinel = document.querySelector('#tab-' + tf + ' .load-sentinel');
                     if (sentinel) sentinel.remove();
                 }
@@ -140,7 +144,7 @@
                 loadDetails();
             } else {
                 if (!tfState[tf]) initOhlcTab(tf);
-                if (tfState[tf].page === 0) loadOhlcPage(tf);
+                if (!tfState[tf].started) loadOhlcPage(tf);
                 observeSentinel(tf);
             }
         });

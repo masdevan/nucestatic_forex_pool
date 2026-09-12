@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 import uvicorn
 import httpx
@@ -31,6 +32,8 @@ if CORS_ORIGINS:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+TIMEFRAMES = {"m1", "m5", "m15", "m30", "h1", "h4", "d1", "w1", "mn1"}
 
 @app.get("/api/health")
 async def health_check():
@@ -96,14 +99,18 @@ async def symbol_ohlc(
     start_date: str = Query(None),
     end_date: str = Query(None),
     limit: int = Query(50, ge=1, le=1000),
-    page: int = Query(1, ge=1)
+    page: int = Query(1, ge=1),
+    cursor: int = Query(None)
 ):
-    from math import ceil
     from app.databases.config import SessionLocal
     from sqlalchemy import text as sql_text
     from datetime import datetime
 
-    tbl = f"ohlc_{symbol.lower()}_{timeframe.lower()}"
+    tf_lower = timeframe.lower()
+    if not re.match(r"^[A-Za-z0-9_]+$", symbol) or tf_lower not in TIMEFRAMES:
+        return {"symbol": symbol, "timeframe": timeframe, "data": [], "has_next": False, "next_cursor": None}
+
+    tbl = f"ohlc_{symbol.lower()}_{tf_lower}"
     db = SessionLocal()
     try:
         check = db.execute(sql_text(
@@ -111,12 +118,14 @@ async def symbol_ohlc(
             "WHERE table_schema = DATABASE() AND table_name = :tbl"
         ), {"tbl": tbl}).scalar()
         if not check:
-            return {"symbol": symbol, "timeframe": timeframe, "data": [], "total": 0, "pagination": {
-                "page": 1, "limit": limit, "total": 0, "total_pages": 1, "has_next": False, "has_prev": False
-            }}
+            return {"symbol": symbol, "timeframe": timeframe, "data": [], "has_next": False, "next_cursor": None}
 
         where_clauses = ["symbol = :sym"]
         params = {"sym": symbol}
+
+        if cursor is not None:
+            where_clauses.append("time > :cursor")
+            params["cursor"] = cursor
 
         if start_date:
             for fmt in ("%Y-%m-%d %H:%M", "%Y-%m-%d"):
@@ -140,14 +149,20 @@ async def symbol_ohlc(
                     continue
 
         where_sql = " AND ".join(where_clauses)
+        fetch = limit + 1
 
-        rows = db.execute(sql_text(
-            f"SELECT symbol, open, high, low, close, time FROM `{tbl}` WHERE {where_sql} ORDER BY time ASC LIMIT {limit} OFFSET {(page - 1) * limit}"
-        ), params).fetchall()
-
-        total = db.execute(sql_text(
-            f"SELECT COUNT(*) FROM `{tbl}` WHERE {where_sql}"
-        ), params).scalar()
+        if cursor is not None:
+            rows = db.execute(sql_text(
+                f"SELECT symbol, open, high, low, close, time FROM `{tbl}` "
+                f"WHERE {where_sql} ORDER BY time ASC LIMIT {fetch}"
+            ), params).fetchall()
+        else:
+            rows = db.execute(sql_text(
+                f"SELECT o.symbol, o.open, o.high, o.low, o.close, o.time "
+                f"FROM `{tbl}` o JOIN (SELECT id FROM `{tbl}` WHERE {where_sql} "
+                f"ORDER BY time ASC LIMIT {fetch} OFFSET {(page - 1) * limit}) t ON o.id = t.id "
+                f"ORDER BY o.time ASC"
+            ), params).fetchall()
 
         def fmt(v):
             if isinstance(v, (int, float)):
@@ -156,8 +171,9 @@ async def symbol_ohlc(
                 return v.strftime("%Y-%m-%d %H:%M")
             return str(v) if v else None
 
+        has_next = len(rows) > limit
         data = []
-        for r in rows:
+        for r in rows[:limit]:
             data.append({
                 "symbol": r[0],
                 "open": float(r[1]) if r[1] else None,
@@ -167,20 +183,17 @@ async def symbol_ohlc(
                 "time": fmt(r[5])
             })
 
-        total_pages = ceil(total / limit) if total > 0 else 1
+        next_cursor = None
+        if data:
+            last = rows[len(data) - 1][5]
+            next_cursor = int(last) if isinstance(last, (int, float)) else int(last.timestamp())
+
         return {
             "symbol": symbol,
             "timeframe": timeframe,
             "data": data,
-            "total": total,
-            "pagination": {
-                "page": page,
-                "limit": limit,
-                "total": total,
-                "total_pages": total_pages,
-                "has_next": page * limit < total,
-                "has_prev": page > 1
-            }
+            "has_next": has_next,
+            "next_cursor": next_cursor
         }
     finally:
         db.close()
