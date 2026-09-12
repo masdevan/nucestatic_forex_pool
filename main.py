@@ -157,12 +157,32 @@ async def symbol_ohlc(
                 f"WHERE {where_sql} ORDER BY time ASC LIMIT {fetch}"
             ), params).fetchall()
         else:
-            rows = db.execute(sql_text(
-                f"SELECT o.symbol, o.open, o.high, o.low, o.close, o.time "
-                f"FROM `{tbl}` o JOIN (SELECT id FROM `{tbl}` WHERE {where_sql} "
-                f"ORDER BY time ASC LIMIT {fetch} OFFSET {(page - 1) * limit}) t ON o.id = t.id "
-                f"ORDER BY o.time ASC"
-            ), params).fetchall()
+            skip = (page - 1) * limit
+            anchor = None
+            try:
+                anchor = db.execute(sql_text(
+                    "SELECT start_time FROM ohlc_page_anchor "
+                    "WHERE symbol = :s AND timeframe = :tf AND k = :k LIMIT 1"
+                ), {"s": symbol, "tf": tf_lower.upper(), "k": skip // 1000}).scalar()
+            except Exception:
+                anchor = None
+            if anchor is not None and not start_date and not end_date:
+                aparams = dict(params)
+                aparams["anchor"] = anchor
+                anchor_where = where_sql + " AND time >= :anchor"
+                rows = db.execute(sql_text(
+                    f"SELECT o.symbol, o.open, o.high, o.low, o.close, o.time "
+                    f"FROM `{tbl}` o JOIN (SELECT id FROM `{tbl}` WHERE {anchor_where} "
+                    f"ORDER BY time ASC LIMIT {fetch} OFFSET {skip % 1000}) t ON o.id = t.id "
+                    f"ORDER BY o.time ASC"
+                ), aparams).fetchall()
+            else:
+                rows = db.execute(sql_text(
+                    f"SELECT o.symbol, o.open, o.high, o.low, o.close, o.time "
+                    f"FROM `{tbl}` o JOIN (SELECT id FROM `{tbl}` WHERE {where_sql} "
+                    f"ORDER BY time ASC LIMIT {fetch} OFFSET {(page - 1) * limit}) t ON o.id = t.id "
+                    f"ORDER BY o.time ASC"
+                ), params).fetchall()
 
         def fmt(v):
             if isinstance(v, (int, float)):

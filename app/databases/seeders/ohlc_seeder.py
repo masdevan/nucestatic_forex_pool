@@ -3,6 +3,7 @@ import MetaTrader5 as mt5
 from sqlalchemy import text
 from app.api.models.configs.mt5_config import TIMEFRAME_MAP, init_mt5, shutdown_mt5
 from app.databases.config import engine
+from app.databases.seeders.anchor_seeder import rebuild_anchors
 
 TIMEFRAMES = ["m1", "m5", "m15", "m30", "h1", "h4", "d1", "w1", "mn1"]
 TIMEFRAME_LABELS = ["M1", "M5", "M15", "M30", "H1", "H4", "D1", "W1", "MN1"]
@@ -173,6 +174,9 @@ def seed_single(symbol, tf_key):
         offset += batch
         pct = inserted * 100 // total
         print(f"\r  {tf_key.upper():>4}: {inserted:>10,} / {total:,} ({pct}%)", end="", flush=True)
+
+    with engine.begin() as conn:
+        rebuild_anchors(symbol, tf_key, conn)
 
     print(f"\r  {tf_key.upper():>4}: {inserted:>10,} / {total:,} ✓      ")
     return inserted

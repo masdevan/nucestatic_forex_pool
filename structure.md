@@ -32,10 +32,12 @@ forex_pool
 │       │   ├── manager.py
 │       │   ├── version_20260904_ohlc_dynamic.py
 │       │   ├── version_20260904_symbol_ranges.py
-│       │   └── version_20260904_symbols.py
+│       │   ├── version_20260904_symbols.py
+│       │   └── version_20260912_ohlc_page_anchor.py
 │       ├── models
 │       │   └── symbol_model.py
 │       └── seeders
+│           ├── anchor_seeder.py
 │           ├── categories.py
 │           ├── ohlc_seeder.py
 │           ├── symbol_range_seeder.py
