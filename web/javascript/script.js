@@ -147,11 +147,13 @@ function initApiTester() {
             var ed = (document.getElementById('p-end') || {}).value || '';
             var lm = (document.getElementById('p-limit') || {}).value || '50';
             var cur = (document.getElementById('p-cursor') || {}).value || '';
+            var bef = (document.getElementById('p-before') || {}).value || '';
             url = '/api/ohlc/' + encodeURIComponent(sym2) + '?timeframe=' + encodeURIComponent(tf);
             if (sd) url += '&start_date=' + encodeURIComponent(sd.replace('T', ' '));
             if (ed) url += '&end_date=' + encodeURIComponent(ed.replace('T', ' '));
             url += '&limit=' + encodeURIComponent(lm);
             if (cur) url += '&cursor=' + encodeURIComponent(cur);
+            if (bef) url += '&before=' + encodeURIComponent(bef);
         }
         urlDiv.textContent = url || '-';
     }
@@ -159,7 +161,7 @@ function initApiTester() {
     function renderParams() {
         var html = '';
         if (currentEp === 'symbols') {
-            html += '<div class="tester-row"><label>search</label><input id="p-search" placeholder="contoh: btc"></div>';
+            html += '<div class="tester-row"><label>search</label><input id="p-search" placeholder="example: btc"></div>';
             html += '<div class="tester-row"><label>limit</label><input id="p-limit" type="number" value="50" min="1" max="1000"></div>';
             html += '<div class="tester-row"><label>page</label><input id="p-page" type="number" value="1" min="1"></div>';
         }
@@ -174,7 +176,8 @@ function initApiTester() {
             html += '<div class="tester-row"><label>start_date</label><input id="p-start" type="datetime-local"></div>';
             html += '<div class="tester-row"><label>end_date</label><input id="p-end" type="datetime-local"></div>';
             html += '<div class="tester-row"><label>limit</label><input id="p-limit" type="number" value="50" min="1" max="1000"></div>';
-            html += '<div class="tester-row"><label>cursor</label><input id="p-cursor" type="number" placeholder="kosongkan untuk mulai dari awal"></div>';
+            html += '<div class="tester-row"><label>cursor</label><input id="p-cursor" type="number" placeholder="forward paging: last row ts"></div>';
+            html += '<div class="tester-row"><label>before</label><input id="p-before" type="number" placeholder="backward paging: fetch before this ts"></div>';
         }
         paramsDiv.innerHTML = html;
         updateUrl();

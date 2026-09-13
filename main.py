@@ -100,7 +100,8 @@ async def symbol_ohlc(
     end_date: str = Query(None),
     limit: int = Query(50, ge=1, le=1000),
     page: int = Query(1, ge=1),
-    cursor: int = Query(None)
+    cursor: int = Query(None),
+    before: int = Query(None)
 ):
     from app.databases.config import SessionLocal
     from sqlalchemy import text as sql_text
@@ -123,7 +124,10 @@ async def symbol_ohlc(
         where_clauses = ["symbol = :sym"]
         params = {"sym": symbol}
 
-        if cursor is not None:
+        if before is not None:
+            where_clauses.append("time < :before")
+            params["before"] = before
+        elif cursor is not None:
             where_clauses.append("time > :cursor")
             params["cursor"] = cursor
 
@@ -151,7 +155,14 @@ async def symbol_ohlc(
         where_sql = " AND ".join(where_clauses)
         fetch = limit + 1
 
-        if cursor is not None:
+        if before is not None:
+            rows = db.execute(sql_text(
+                f"SELECT symbol, open, high, low, close, time FROM `{tbl}` "
+                f"WHERE {where_sql} ORDER BY time DESC LIMIT {fetch}"
+            ), params).fetchall()
+            has_next = len(rows) > limit
+            rows = list(reversed(rows[:limit]))
+        elif cursor is not None:
             rows = db.execute(sql_text(
                 f"SELECT symbol, open, high, low, close, time FROM `{tbl}` "
                 f"WHERE {where_sql} ORDER BY time ASC LIMIT {fetch}"
@@ -191,7 +202,8 @@ async def symbol_ohlc(
                 return v.strftime("%Y-%m-%d %H:%M")
             return str(v) if v else None
 
-        has_next = len(rows) > limit
+        if before is None:
+            has_next = len(rows) > limit
         data = []
         for r in rows[:limit]:
             data.append({
@@ -205,7 +217,7 @@ async def symbol_ohlc(
 
         next_cursor = None
         if data:
-            last = rows[len(data) - 1][5]
+            last = rows[0][5] if before is not None else rows[len(data) - 1][5]
             next_cursor = int(last) if isinstance(last, (int, float)) else int(last.timestamp())
 
         return {
