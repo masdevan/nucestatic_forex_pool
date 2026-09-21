@@ -8,9 +8,9 @@ services:
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
-      - --innodb-buffer-pool-size=512M
+      - --innodb-buffer-pool-size=384M
       - --innodb-log-buffer-size=64M
-      - --max-connections=100
+      - --max-connections=200
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-forexpool}

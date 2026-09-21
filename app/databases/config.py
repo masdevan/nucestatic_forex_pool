@@ -13,7 +13,15 @@ MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", "algotrading")
 
 DATABASE_URL = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}"
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True, echo=False)
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_size=15,
+    max_overflow=15,
+    pool_recycle=1800,
+    pool_use_lifo=True,
+    echo=False,
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()

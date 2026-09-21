@@ -1,5 +1,6 @@
 import os
 import re
+import time
 from pathlib import Path
 import uvicorn
 import httpx
@@ -35,6 +36,23 @@ if CORS_ORIGINS:
 
 TIMEFRAMES = {"m1", "m5", "m15", "m30", "h1", "h4", "d1", "w1", "mn1"}
 
+_TABLE_CACHE = {}
+_TABLE_CACHE_TTL = 60
+
+def table_exists(db, tbl):
+    now = time.time()
+    cached = _TABLE_CACHE.get(tbl)
+    if cached is not None and now - cached[0] < _TABLE_CACHE_TTL:
+        return cached[1]
+    from sqlalchemy import text as sql_text
+    check = db.execute(sql_text(
+        "SELECT COUNT(*) FROM information_schema.tables "
+        "WHERE table_schema = DATABASE() AND table_name = :tbl"
+    ), {"tbl": tbl}).scalar()
+    exists = bool(check)
+    _TABLE_CACHE[tbl] = (now, exists)
+    return exists
+
 @app.get("/api/health")
 async def health_check():
     # terminal = get_terminal_info()
@@ -44,7 +62,7 @@ async def health_check():
     }
 
 @app.get("/api/symbols")
-async def symbols(search: str = None, limit: int = Query(50, ge=1, le=1000), page: int = Query(1, ge=1)):
+def symbols(search: str = None, limit: int = Query(50, ge=1, le=1000), page: int = Query(1, ge=1)):
     from math import ceil
     from app.databases.config import SessionLocal
     db = SessionLocal()
@@ -77,7 +95,7 @@ async def symbols(search: str = None, limit: int = Query(50, ge=1, le=1000), pag
         db.close()
 
 @app.get("/api/symbols/{symbol}/range")
-async def symbol_range(symbol: str):
+def symbol_range(symbol: str):
     from app.databases.config import SessionLocal
     db = SessionLocal()
     try:
@@ -93,7 +111,7 @@ async def symbol_range(symbol: str):
         db.close()
 
 @app.get("/api/ohlc/{symbol}")
-async def symbol_ohlc(
+def symbol_ohlc(
     symbol: str,
     timeframe: str = Query("m1"),
     start_date: str = Query(None),
@@ -114,11 +132,7 @@ async def symbol_ohlc(
     tbl = f"ohlc_{symbol.lower()}_{tf_lower}"
     db = SessionLocal()
     try:
-        check = db.execute(sql_text(
-            "SELECT COUNT(*) FROM information_schema.tables "
-            "WHERE table_schema = DATABASE() AND table_name = :tbl"
-        ), {"tbl": tbl}).scalar()
-        if not check:
+        if not table_exists(db, tbl):
             return {"symbol": symbol, "timeframe": timeframe, "data": [], "has_next": False, "next_cursor": None}
 
         where_clauses = ["symbol = :sym"]
