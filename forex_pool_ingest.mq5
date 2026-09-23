@@ -7,12 +7,13 @@ string SYMBOL = "XAUUSDm,USDJPYm,GBPUSDm,USOILm,BTCUSDm,EURUSDm";
 input group "Connection"
 input string InpApiBase = "https://sourcewave.devan.my.id";
 input string InpServer = "";
-input int InpTimeoutMs = 5000;
+input int InpTimeoutMs = 15000;
 
 input group "Sync"
 input datetime InpMinStartDate = D'2026.09.20 00:00';
 input int InpPollMs = 2000;
-input int InpBatchSize = 500;
+input int InpBatchSize = 200;
+input bool InpLogPosts = true;
 
 string TIMEFRAME_KEYS[9] = {"m1", "m5", "m15", "m30", "h1", "h4", "d1", "w1", "mn1"};
 ENUM_TIMEFRAMES TIMEFRAME_PERIODS[9] = {PERIOD_M1, PERIOD_M5, PERIOD_M15, PERIOD_M30, PERIOD_H1, PERIOD_H4, PERIOD_D1, PERIOD_W1, PERIOD_MN1};
@@ -29,6 +30,8 @@ double g_lastOhlc[];
 int g_failures = 0;
 string g_lastError = "";
 datetime g_lastRejectLog = 0;
+datetime g_lastCopyLog = 0;
+datetime g_heartbeat = 0;
 
 int OnStart()
 {
@@ -37,6 +40,7 @@ int OnStart()
     while (!IsStopped())
     {
         RefreshSymbols();
+        Heartbeat();
         if (SyncAll())
         {
             if (g_failures > 0)
@@ -126,6 +130,19 @@ void RefreshSymbols()
             Print("Symbol unavailable: ", g_wanted[w]);
             g_wantedReported[w] = true;
         }
+    }
+}
+
+void Heartbeat()
+{
+    if (TimeCurrent() - g_heartbeat < 300)
+        return;
+    g_heartbeat = TimeCurrent();
+    for (int s = 0; s < g_symbolCount; s++)
+    {
+        int slot = s * 9;
+        string stamp = g_lastPosted[slot] > 0 ? TimeToString(g_lastPosted[slot]) : "waiting";
+        Print("status ", g_symbols[s], " m1 @ ", stamp);
     }
 }
 
@@ -237,12 +254,21 @@ bool SyncTimeframe(int symbolIndex, int timeframeIndex)
     datetime start = g_lastPosted[slot] > 0 ? g_lastPosted[slot] : g_minStart;
     MqlRates rates[];
     int copied = CopyRates(g_symbols[symbolIndex], TIMEFRAME_PERIODS[timeframeIndex], start, TimeCurrent(), rates);
-    if (copied <= 0)
+    if (copied < 0)
+    {
+        if (TimeCurrent() - g_lastCopyLog > 60)
+        {
+            Print("rates unavailable ", g_symbols[symbolIndex], " ", TIMEFRAME_KEYS[timeframeIndex], ": error ", GetLastError());
+            g_lastCopyLog = TimeCurrent();
+        }
+        return true;
+    }
+    if (copied == 0)
         return true;
 
     string candles[];
-    datetime lastTime = 0;
-    double lastValues[4];
+    datetime candleTimes[];
+    double candleValues[];
     bool changed = false;
 
     for (int i = 0; i < copied; i++)
@@ -253,46 +279,73 @@ bool SyncTimeframe(int symbolIndex, int timeframeIndex)
             continue;
         int size = ArraySize(candles);
         ArrayResize(candles, size + 1);
+        ArrayResize(candleTimes, size + 1);
+        ArrayResize(candleValues, (size + 1) * 4);
         candles[size] = CandleJson(g_symbols[symbolIndex], timeframeIndex, rates[i]);
-        lastTime = rates[i].time;
-        lastValues[0] = rates[i].open;
-        lastValues[1] = rates[i].high;
-        lastValues[2] = rates[i].low;
-        lastValues[3] = rates[i].close;
+        candleTimes[size] = rates[i].time;
+        candleValues[size * 4] = rates[i].open;
+        candleValues[size * 4 + 1] = rates[i].high;
+        candleValues[size * 4 + 2] = rates[i].low;
+        candleValues[size * 4 + 3] = rates[i].close;
         changed = true;
     }
 
     if (!changed)
         return true;
 
-    int status = PostCandles(candles);
-    if (status != 0)
-    {
-        if (status == -1 || status >= 500)
-        {
-            g_lastError = StringFormat("%s %s failed: %s", g_symbols[symbolIndex], TIMEFRAME_KEYS[timeframeIndex], g_lastError);
-            return false;
-        }
-        g_lastPosted[slot] = lastTime;
-        int rejectBase = slot * 4;
-        g_lastOhlc[rejectBase] = lastValues[0];
-        g_lastOhlc[rejectBase + 1] = lastValues[1];
-        g_lastOhlc[rejectBase + 2] = lastValues[2];
-        g_lastOhlc[rejectBase + 3] = lastValues[3];
-        if (TimeCurrent() - g_lastRejectLog > 60)
-        {
-            Print("POST rejected (", status, ") ", g_symbols[symbolIndex], " ", TIMEFRAME_KEYS[timeframeIndex], ": ", g_lastError);
-            g_lastRejectLog = TimeCurrent();
-        }
-        return true;
-    }
+    return SendBatches(symbolIndex, timeframeIndex, slot, candles, candleTimes, candleValues);
+}
 
-    g_lastPosted[slot] = lastTime;
-    int base = slot * 4;
-    g_lastOhlc[base] = lastValues[0];
-    g_lastOhlc[base + 1] = lastValues[1];
-    g_lastOhlc[base + 2] = lastValues[2];
-    g_lastOhlc[base + 3] = lastValues[3];
+void ApplyProgress(int slot, datetime candleTime, double &values[], int base)
+{
+    g_lastPosted[slot] = candleTime;
+    int obase = slot * 4;
+    g_lastOhlc[obase] = values[base];
+    g_lastOhlc[obase + 1] = values[base + 1];
+    g_lastOhlc[obase + 2] = values[base + 2];
+    g_lastOhlc[obase + 3] = values[base + 3];
+}
+
+bool SendBatches(int symbolIndex, int timeframeIndex, int slot, string &candles[], datetime &times[], double &values[])
+{
+    string sym = g_symbols[symbolIndex];
+    string tf = TIMEFRAME_KEYS[timeframeIndex];
+    int total = ArraySize(candles);
+    int batchSize = InpBatchSize < 1 ? 1 : InpBatchSize;
+    for (int start = 0; start < total; start += batchSize)
+    {
+        int end = start + batchSize;
+        if (end > total)
+            end = total;
+        string body = "[";
+        for (int i = start; i < end; i++)
+        {
+            if (i > start)
+                body += ",";
+            body += candles[i];
+        }
+        body += "]";
+        uint mark = GetTickCount();
+        string response;
+        int status = HttpPost("/api/ohlc", body, response);
+        uint elapsed = GetTickCount() - mark;
+        if (status < 200 || status >= 300)
+        {
+            g_lastError = StringFormat("%s %s failed: status %d, error %d", sym, tf, status, GetLastError());
+            if (status == -1 || status >= 500)
+                return false;
+            ApplyProgress(slot, times[end - 1], values, (end - 1) * 4);
+            if (TimeCurrent() - g_lastRejectLog > 60)
+            {
+                Print("POST rejected (", status, ") ", sym, " ", tf, ": ", g_lastError);
+                g_lastRejectLog = TimeCurrent();
+            }
+            return true;
+        }
+        ApplyProgress(slot, times[end - 1], values, (end - 1) * 4);
+        if (InpLogPosts)
+            Print("candle ", sym, " ", tf, " updated (", end - start, ") ", elapsed, "ms");
+    }
     return true;
 }
 
@@ -323,27 +376,4 @@ string JsonEscape(string value)
     return value;
 }
 
-int PostCandles(string &candles[])
-{
-    int total = ArraySize(candles);
-    int batchSize = InpBatchSize < 1 ? 1 : InpBatchSize;
-    for (int start = 0; start < total; start += batchSize)
-    {
-        int end = start + batchSize;
-        if (end > total)
-            end = total;
-        string body = "[";
-        for (int i = start; i < end; i++)
-        {
-            if (i > start)
-                body += ",";
-            body += candles[i];
-        }
-        body += "]";
-        string response;
-        int status = HttpPost("/api/ohlc", body, response);
-        if (status < 200 || status >= 300)
-            return status;
-    }
-    return 0;
-}
+

@@ -156,8 +156,21 @@ def save_symbol(conn, item):
     ), {"server": item["server"], "name": item["symbol"]})
 
 
-def upsert_candle(conn, item):
-    range_id, count, last_time = get_range_state(conn, item)
+def cached_range_state(conn, item, range_cache):
+    key = (item["server"], item["symbol"], item["timeframe"])
+    state = range_cache.get(key)
+    if state is None:
+        range_id, count, last_time = get_range_state(conn, item)
+        state = [range_id, count, last_time]
+        range_cache[key] = state
+    return state
+
+
+def upsert_candle(conn, item, range_cache=None, dirty_anchors=None):
+    if range_cache is None:
+        range_cache = {}
+    state = cached_range_state(conn, item, range_cache)
+    range_id, count, last_time = state[0], state[1], state[2]
     existed = candle_exists(conn, item)
     save_candle(conn, item)
     inserted = not existed
@@ -165,9 +178,16 @@ def upsert_candle(conn, item):
     if inserted:
         if last_time is None or item["time"] > last_time:
             ensure_anchor(item["symbol"], item["timeframe"], conn, count, item["time"])
+            state[1] = count + 1
+            state[2] = item["time"] if last_time is None else max(last_time, item["time"])
         else:
-            rebuild_anchors(item["symbol"], item["timeframe"], conn)
-            anchors_rebuilt = True
+            if dirty_anchors is not None:
+                dirty_anchors.add((item["symbol"], item["timeframe"]))
+                anchors_rebuilt = True
+            else:
+                rebuild_anchors(item["symbol"], item["timeframe"], conn)
+                anchors_rebuilt = True
+            state[1] = count + 1
     save_range(conn, item, range_id, count, inserted)
     save_symbol(conn, item)
     return {
@@ -226,18 +246,24 @@ def ingest_candles(candles, min_start_date=""):
             item["table_created"] = ensure_tables(conn, item["table"])
     results = []
     pending_error = None
+    range_cache = {}
+    dirty_anchors = set()
     for item in items:
         if min_start is not None and item["time"] < min_start:
             results.append(skipped_result(item))
             continue
         try:
             with engine.begin() as conn:
-                results.append(upsert_candle(conn, item))
+                results.append(upsert_candle(conn, item, range_cache, dirty_anchors))
         except Exception as error:
             if pending_error is None:
                 pending_error = error
     if pending_error is not None:
         raise pending_error
+    if dirty_anchors:
+        with engine.begin() as conn:
+            for anchor_symbol, anchor_timeframe in dirty_anchors:
+                rebuild_anchors(anchor_symbol, anchor_timeframe, conn)
     return results
 
 
