@@ -35,7 +35,7 @@ int OnInit()
     g_minStart = FetchMinStartDate();
     if (g_minStart <= 0)
         g_minStart = InpMinStartDate > 0 ? InpMinStartDate : TimeCurrent();
-    Print("ForexPool ingest aktif untuk ", _Symbol, ", server ", g_server, ", min start ", TimeToString(g_minStart));
+    Print("ForexPool ingest active for ", _Symbol, ", server ", g_server, ", min start ", TimeToString(g_minStart));
     SetPollInterval(InpPollMs < 100 ? 100 : InpPollMs);
     return INIT_SUCCEEDED;
 }
@@ -57,14 +57,14 @@ void OnTimer()
     if (ok)
     {
         if (g_failures > 0)
-            Print(_Symbol, " sync pulih setelah ", g_failures, " kegagalan");
+            Print(_Symbol, " sync recovered after ", g_failures, " failures");
         g_failures = 0;
         SetPollInterval(InpPollMs < 100 ? 100 : InpPollMs);
         return;
     }
     g_failures++;
     if (g_failures == 1 || (g_failures & (g_failures - 1)) == 0)
-        Print(_Symbol, " sync gagal (", g_lastError, "), kegagalan ke-", g_failures);
+        Print(_Symbol, " sync failed (", g_lastError, "), failure #", g_failures);
     int shift = g_failures < 6 ? g_failures : 6;
     int backoff = InpPollMs * (1 << shift);
     if (backoff > 60000)
@@ -86,7 +86,7 @@ void Heartbeat()
     if (TimeCurrent() - g_heartbeat < 300)
         return;
     g_heartbeat = TimeCurrent();
-    string stamp = g_lastPosted[0] > 0 ? TimeToString(g_lastPosted[0]) : "menunggu";
+    string stamp = g_lastPosted[0] > 0 ? TimeToString(g_lastPosted[0]) : "waiting";
     Print("status ", _Symbol, " m1 @ ", stamp);
 }
 
@@ -105,7 +105,7 @@ bool SyncTimeframe(int t)
     {
         if (TimeCurrent() - g_lastHistoryLog > 60)
         {
-            Print(_Symbol, " ", TIMEFRAME_KEYS[t], " masih sinkronisasi history dari broker");
+            Print(_Symbol, " ", TIMEFRAME_KEYS[t], " still syncing history from broker");
             g_lastHistoryLog = TimeCurrent();
         }
         return true;
@@ -181,20 +181,20 @@ bool SendBatches(int t, string &candles[], datetime &times[], double &values[])
         uint elapsed = GetTickCount() - mark;
         if (status < 200 || status >= 300)
         {
-            g_lastError = StringFormat("%s %s gagal: status %d, error %d", _Symbol, tf, status, GetLastError());
+            g_lastError = StringFormat("%s %s failed: status %d, error %d", _Symbol, tf, status, GetLastError());
             if (status == -1 || status >= 500)
                 return false;
             ApplyProgress(t, times[end - 1], values, (end - 1) * 4);
             if (TimeCurrent() - g_lastRejectLog > 60)
             {
-                Print("POST ditolak (", status, ") ", _Symbol, " ", tf, ": ", g_lastError);
+                Print("POST rejected (", status, ") ", _Symbol, " ", tf, ": ", g_lastError);
                 g_lastRejectLog = TimeCurrent();
             }
             return true;
         }
         ApplyProgress(t, times[end - 1], values, (end - 1) * 4);
         if (InpLogPosts)
-            Print("candle ", _Symbol, " ", tf, " terkirim (", end - start, ") ", elapsed, "ms");
+            Print("candle ", _Symbol, " ", tf, " sent (", end - start, ") ", elapsed, "ms");
     }
     return true;
 }
@@ -240,7 +240,7 @@ bool HttpGet(string path, string &response)
     int status = WebRequest("GET", InpApiBase + path, "", InpTimeoutMs, data, result, headers);
     if (status < 200 || status >= 300)
     {
-        Print("GET ", path, " gagal: status ", status, ", error ", GetLastError());
+        Print("GET ", path, " failed: status ", status, ", error ", GetLastError());
         return false;
     }
     response = CharArrayToString(result, 0, WHOLE_ARRAY, CP_UTF8);
