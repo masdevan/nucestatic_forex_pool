@@ -104,8 +104,8 @@ def prepare(candle):
 def get_range_state(conn, item):
     row = conn.execute(text(
         "SELECT id, count, last_ts FROM symbol_ranges "
-        "WHERE symbol = :symbol AND timeframe = :timeframe LIMIT 1"
-    ), {"symbol": item["symbol"], "timeframe": item["timeframe"].upper()}).fetchone()
+        "WHERE server = :server AND symbol = :symbol AND timeframe = :timeframe LIMIT 1"
+    ), {"server": item["server"], "symbol": item["symbol"], "timeframe": item["timeframe"].upper()}).fetchone()
     if row:
         return row[0], int(row[1] or 0), int(row[2].timestamp()) if row[2] else None
     stats = conn.execute(text(
@@ -114,18 +114,24 @@ def get_range_state(conn, item):
     return None, int(stats[0] or 0), int(stats[1]) if stats[1] is not None else None
 
 
+def candle_exists(conn, item):
+    row = conn.execute(text(
+        f"SELECT 1 FROM `{item['table']}` WHERE symbol = :symbol AND time = :time LIMIT 1"
+    ), {"symbol": item["symbol"], "time": item["time"]}).fetchone()
+    return row is not None
+
+
 def save_candle(conn, item):
-    result = conn.execute(text(
+    conn.execute(text(
         f"INSERT INTO `{item['table']}` (symbol, open, high, low, close, time) "
         "VALUES (:symbol, :open, :high, :low, :close, :time) "
         "ON DUPLICATE KEY UPDATE open = VALUES(open), high = VALUES(high), "
         "low = VALUES(low), close = VALUES(close)"
     ), item)
-    return result.rowcount == 1
 
 
 def save_range(conn, item, range_id, count, inserted):
-    stamp = datetime.fromtimestamp(item["time"])
+    stamp = datetime.fromtimestamp(item["time"], tz=timezone.utc).replace(tzinfo=None)
     delta = 1 if inserted else 0
     if range_id is not None:
         conn.execute(text(
@@ -150,7 +156,9 @@ def save_symbol(conn, item):
 
 def upsert_candle(conn, item):
     range_id, count, last_time = get_range_state(conn, item)
-    inserted = save_candle(conn, item)
+    existed = candle_exists(conn, item)
+    save_candle(conn, item)
+    inserted = not existed
     anchors_rebuilt = False
     if inserted:
         if last_time is None or item["time"] > last_time:
@@ -222,3 +230,58 @@ def ingest_candles(candles, min_start_date=""):
                 continue
             results.append(upsert_candle(conn, item))
     return results
+
+
+def reconcile_symbol_ranges():
+    summaries = []
+    with engine.begin() as conn:
+        tables = conn.execute(text(
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_schema = DATABASE() AND table_name LIKE 'ohlc\\_%'"
+        )).fetchall()
+        for (table,) in tables:
+            if table == "ohlc_page_anchor":
+                continue
+            parts = table.split("_")
+            if len(parts) < 3:
+                continue
+            timeframe = parts[-1]
+            if timeframe not in TIMEFRAMES:
+                continue
+            symbols = conn.execute(text(
+                f"SELECT DISTINCT symbol FROM `{table}`"
+            )).fetchall()
+            for (symbol_name,) in symbols:
+                stats = conn.execute(text(
+                    f"SELECT COUNT(*), MIN(time), MAX(time) FROM `{table}` WHERE symbol = :symbol"
+                ), {"symbol": symbol_name}).fetchone()
+                actual_count = int(stats[0] or 0)
+                first_ts = stats[1]
+                last_ts = stats[2]
+                range_row = conn.execute(text(
+                    "SELECT id, server FROM symbol_ranges "
+                    "WHERE symbol = :symbol AND timeframe = :timeframe LIMIT 1"
+                ), {"symbol": symbol_name, "timeframe": timeframe.upper()}).fetchone()
+                first_stamp = datetime.fromtimestamp(first_ts, tz=timezone.utc).replace(tzinfo=None) if first_ts else None
+                last_stamp = datetime.fromtimestamp(last_ts, tz=timezone.utc).replace(tzinfo=None) if last_ts else None
+                if range_row:
+                    conn.execute(text(
+                        "UPDATE symbol_ranges SET first_ts = :first_ts, last_ts = :last_ts, count = :count "
+                        "WHERE id = :id"
+                    ), {"first_ts": first_stamp, "last_ts": last_stamp, "count": actual_count, "id": range_row[0]})
+                    server_name = range_row[1]
+                else:
+                    server_name = ""
+                    symbol_server = conn.execute(text(
+                        "SELECT server FROM symbols WHERE name = :name LIMIT 1"
+                    ), {"name": symbol_name}).fetchone()
+                    if symbol_server:
+                        server_name = symbol_server[0] or ""
+                    conn.execute(text(
+                        "INSERT INTO symbol_ranges (server, symbol, timeframe, first_ts, last_ts, count) "
+                        "VALUES (:server, :symbol, :timeframe, :first_ts, :last_ts, :count)"
+                    ), {"server": server_name, "symbol": symbol_name, "timeframe": timeframe.upper(),
+                        "first_ts": first_stamp, "last_ts": last_stamp, "count": actual_count})
+                rebuild_anchors(symbol_name, timeframe, conn)
+                summaries.append({"symbol": symbol_name, "timeframe": timeframe, "count": actual_count})
+    return summaries

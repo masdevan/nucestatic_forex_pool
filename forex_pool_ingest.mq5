@@ -69,8 +69,8 @@ void Initialize()
     g_minStart = FetchMinStartDate();
     if (g_minStart <= 0)
     {
-        Print("MIN_START_DATE unavailable, using current time");
-        g_minStart = TimeCurrent();
+        Print("MIN_START_DATE unavailable, using input start");
+        g_minStart = InpMinStartDate > 0 ? InpMinStartDate : TimeCurrent();
     }
     if (g_wantedCount == 0)
         Print("SYMBOL is empty, service idle");
@@ -150,15 +150,16 @@ void AddSymbol(string name)
 
 bool SyncAll()
 {
+    bool ok = true;
     for (int s = 0; s < g_symbolCount; s++)
     {
         for (int t = 0; t < 9; t++)
         {
             if (!SyncTimeframe(s, t))
-                return false;
+                ok = false;
         }
     }
-    return true;
+    return ok;
 }
 
 datetime FetchMinStartDate()
@@ -268,10 +269,19 @@ bool SyncTimeframe(int symbolIndex, int timeframeIndex)
     if (status != 0)
     {
         if (status == -1 || status >= 500)
+        {
+            g_lastError = StringFormat("%s %s failed: %s", g_symbols[symbolIndex], TIMEFRAME_KEYS[timeframeIndex], g_lastError);
             return false;
+        }
+        g_lastPosted[slot] = lastTime;
+        int rejectBase = slot * 4;
+        g_lastOhlc[rejectBase] = lastValues[0];
+        g_lastOhlc[rejectBase + 1] = lastValues[1];
+        g_lastOhlc[rejectBase + 2] = lastValues[2];
+        g_lastOhlc[rejectBase + 3] = lastValues[3];
         if (TimeCurrent() - g_lastRejectLog > 60)
         {
-            Print("POST rejected (", status, "): ", g_lastError);
+            Print("POST rejected (", status, ") ", g_symbols[symbolIndex], " ", TIMEFRAME_KEYS[timeframeIndex], ": ", g_lastError);
             g_lastRejectLog = TimeCurrent();
         }
         return true;
