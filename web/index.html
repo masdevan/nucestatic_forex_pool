@@ -126,13 +126,8 @@
                     </div>
                     <div class="ws-sub-label">Active: <span id="active-subs">None</span></div>
                     <div class="tester-box">
-                        <div class="tester-row">
-                            <label>Channel</label>
-                            <input id="ws-channel" value="trade:EURUSDm" placeholder="trade:EURUSDm">
-                        </div>
-                        <div class="ws-actions">
-                            <button id="ws-sub-btn" class="btn-run">Subscribe</button>
-                            <button id="ws-unsub-btn" class="btn-unsub">Unsubscribe</button>
+                        <div id="ws-channel-list" class="ws-channel-list">
+                            <span class="tester-loading">Loading channels...</span>
                         </div>
                     </div>
                     <div id="ws-result" class="api-result"></div>

@@ -112,6 +112,54 @@
         if (!el) return;
         var keys = Object.keys(subscriptions);
         el.textContent = keys.length === 0 ? 'None' : keys.join(', ');
+        refreshChannelButtons();
+    }
+
+    function refreshChannelButtons() {
+        var list = document.getElementById('ws-channel-list');
+        if (!list) return;
+        list.querySelectorAll('[data-channel]').forEach(function (btn) {
+            var ch = btn.getAttribute('data-channel');
+            var on = !!subscriptions[ch];
+            btn.textContent = on ? 'Unsubscribe' : 'Subscribe';
+            btn.className = on ? 'btn-unsub' : 'btn-run';
+        });
+    }
+
+    function loadChannels() {
+        var list = document.getElementById('ws-channel-list');
+        if (!list) return;
+        fetch('/api/symbols?limit=1000').then(function (r) { return r.json(); }).then(function (d) {
+            var names = (d.symbols || []).map(function (s) { return s.name; });
+            names.sort(function (a, b) { return a.localeCompare(b); });
+            if (!names.length) {
+                list.innerHTML = '<span>Tidak ada simbol tersedia</span>';
+                return;
+            }
+            list.innerHTML = '';
+            names.forEach(function (name) {
+                var ch = 'trade:' + name;
+                var row = document.createElement('div');
+                row.className = 'ws-channel-row';
+                var label = document.createElement('span');
+                label.className = 'ws-channel';
+                label.textContent = ch;
+                var btn = document.createElement('button');
+                btn.setAttribute('data-channel', ch);
+                btn.className = 'btn-run';
+                btn.textContent = 'Subscribe';
+                btn.addEventListener('click', function () {
+                    if (subscriptions[ch]) doUnsubscribe(ch);
+                    else doSubscribe(ch);
+                });
+                row.appendChild(label);
+                row.appendChild(btn);
+                list.appendChild(row);
+            });
+            refreshChannelButtons();
+        }).catch(function () {
+            list.innerHTML = '<span>Gagal memuat channels</span>';
+        });
     }
 
     function connectCentrifugo(token, wsUrl) {
@@ -133,9 +181,6 @@
 
     function initCentrifugo() {
         var connectBtn = document.getElementById('ws-connect');
-        var subBtn = document.getElementById('ws-sub-btn');
-        var unsubBtn = document.getElementById('ws-unsub-btn');
-        var channelInput = document.getElementById('ws-channel');
         if (!connectBtn) return;
 
         connectBtn.addEventListener('click', function () {
@@ -154,19 +199,7 @@
             });
         });
 
-        if (subBtn && channelInput) {
-            subBtn.addEventListener('click', function () {
-                var ch = channelInput.value.trim();
-                if (ch) doSubscribe(ch);
-            });
-        }
-
-        if (unsubBtn && channelInput) {
-            unsubBtn.addEventListener('click', function () {
-                var ch = channelInput.value.trim();
-                if (ch) doUnsubscribe(ch);
-            });
-        }
+        loadChannels();
     }
 
     document.addEventListener('DOMContentLoaded', function () {

@@ -6,7 +6,7 @@ from pathlib import Path
 import uvicorn
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import Response, FileResponse
 from sqlalchemy import text
@@ -27,10 +27,11 @@ try:
 except ValueError:
     MIN_START_DATE = ""
 CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
+APP_NAME = os.getenv("NAME", "FOREXPOOL").strip() or "FOREXPOOL"
 
 app = FastAPI(
-    title="FOREXPOOL",
-    description="API for forex market data dashboard",
+    title=APP_NAME,
+    description="API market data",
     version="1.0.0"
 )
 
@@ -256,14 +257,47 @@ def symbol_ohlc(
     finally:
         db.close()
 
-@app.post("/api/ohlc")
-def ingest_ohlc(payload: CandleIngest | list[CandleIngest]):
-    from app.api.controllers.ohlc_ingest_controller import ingest_candles
-    candles = payload if isinstance(payload, list) else [payload]
+def publish_centrifugo(channel, data):
+    api_url = os.getenv("CENTRIFUGO_API_URL", "")
+    api_key = os.getenv("CENTRIFUGO_API_KEY", "")
+    if not api_url or not api_key:
+        return
     try:
-        results = ingest_candles(candles, MIN_START_DATE)
+        httpx.post(
+            api_url,
+            headers={"Authorization": f"apikey {api_key}"},
+            json={"method": "publish", "params": {"channel": channel, "data": data}},
+            timeout=2,
+        )
+    except Exception:
+        return
+
+
+@app.post("/api/ohlc")
+def ingest_ohlc(payload: CandleIngest | list[CandleIngest], dry: bool = False, background: BackgroundTasks = None):
+    from app.api.controllers.ohlc_ingest_controller import ingest_candles, preview_candles
+    candles = payload if isinstance(payload, list) else [payload]
+    if TYPE != "dynamic" and not dry:
+        raise HTTPException(status_code=403, detail="ingest disabled")
+    try:
+        if dry:
+            results = preview_candles(candles, MIN_START_DATE)
+        else:
+            results = ingest_candles(candles, MIN_START_DATE)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
+    if not dry and background is not None:
+        latest = {}
+        for candle, res in zip(candles, results):
+            if res["action"] == "skipped":
+                continue
+            latest[(res["symbol"], res["timeframe"])] = candle
+        for (sym, tf), candle in latest.items():
+            background.add_task(publish_centrifugo, f"trade:{sym}", {
+                "symbol": sym, "timeframe": tf, "open": candle.open,
+                "high": candle.high, "low": candle.low,
+                "close": candle.close, "time": int(candle.time),
+            })
     return {"status": "ok", "results": results}
 
 @app.get("/api/centrifugo/token")
@@ -295,10 +329,15 @@ async def centrifugo_publish(req: PublishRequest):
         )
         return resp.json()
 
-BRAND = os.getenv("NAME", "MARKET POOL")
+BRAND = APP_NAME
 
 @app.get("/", include_in_schema=False)
 async def dashboard():
+    if TYPE != "dynamic":
+        html = (WEB / "index.html").read_text(encoding="utf-8").replace("{{BRAND}}", BRAND)
+        html = re.sub(r'\s*<div class="api-endpoint-item" data-ep="ingest">.*?</div>', "", html, flags=re.DOTALL)
+        from fastapi.responses import HTMLResponse
+        return HTMLResponse(html)
     return serve_page(WEB / "index.html")
 
 WEB = Path(__file__).parent / "web"

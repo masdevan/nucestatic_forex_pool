@@ -189,6 +189,25 @@ def skipped_result(item):
     }
 
 
+def preview_candles(candles, min_start_date=""):
+    items = [prepare(candle) for candle in candles]
+    min_start = min_start_timestamp(min_start_date)
+    results = []
+    for item in items:
+        item["table_created"] = False
+        if min_start is not None and item["time"] < min_start:
+            results.append(skipped_result(item))
+            continue
+        results.append({
+            "action": "dry_run",
+            "symbol": item["symbol"],
+            "timeframe": item["timeframe"],
+            "table_created": False,
+            "anchors_rebuilt": False,
+        })
+    return results
+
+
 def ingest_candles(candles, min_start_date=""):
     items = [prepare(candle) for candle in candles]
     min_start = min_start_timestamp(min_start_date)

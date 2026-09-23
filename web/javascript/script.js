@@ -155,7 +155,7 @@ function initApiTester() {
             if (cur) url += '&cursor=' + encodeURIComponent(cur);
             if (bef) url += '&before=' + encodeURIComponent(bef);
         } else if (currentEp === 'ingest') {
-            url = '/api/ohlc';
+            url = '/api/ohlc?dry=1';
         }
         urlDiv.textContent = url || '-';
     }

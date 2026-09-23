@@ -718,6 +718,25 @@ h1 {
     margin-top: 16px;
 }
 
+.ws-channel-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.ws-channel-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.ws-channel-row .ws-channel {
+    margin-bottom: 0;
+}
+
 .ws-pub-input {
     width: 100%;
     font-family: Consolas, monospace;
