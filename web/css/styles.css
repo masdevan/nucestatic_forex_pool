@@ -590,6 +590,10 @@ h1 {
     background-color: #22c55e;
 }
 
+.method.post {
+    background-color: #3b82f6;
+}
+
 .ws-section {
     margin-top: 16px;
 }

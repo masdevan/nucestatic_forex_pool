@@ -154,6 +154,8 @@ function initApiTester() {
             url += '&limit=' + encodeURIComponent(lm);
             if (cur) url += '&cursor=' + encodeURIComponent(cur);
             if (bef) url += '&before=' + encodeURIComponent(bef);
+        } else if (currentEp === 'ingest') {
+            url = '/api/ohlc';
         }
         urlDiv.textContent = url || '-';
     }
@@ -179,7 +181,24 @@ function initApiTester() {
             html += '<div class="tester-row"><label>cursor</label><input id="p-cursor" type="number" placeholder="forward paging: last row ts"></div>';
             html += '<div class="tester-row"><label>before</label><input id="p-before" type="number" placeholder="backward paging: fetch before this ts"></div>';
         }
+        if (currentEp === 'ingest') {
+            html += '<div class="tester-row"><label>body (single candle or array)</label>' +
+                '<textarea id="p-body" class="ws-pub-input" rows="10"></textarea></div>';
+        }
         paramsDiv.innerHTML = html;
+        var bodyInput = document.getElementById('p-body');
+        if (bodyInput) {
+            bodyInput.value = JSON.stringify({
+                server: '',
+                symbol: 'EURUSDm',
+                timeframe: 'm1',
+                open: 1.12345,
+                high: 1.12400,
+                low: 1.12300,
+                close: 1.12380,
+                time: 1789900000
+            }, null, 2);
+        }
         updateUrl();
 
         paramsDiv.querySelectorAll('input, select').forEach(function(el) {
@@ -202,9 +221,26 @@ function initApiTester() {
     runBtn.addEventListener('click', function() {
         if (!currentEp) return;
         var url = urlDiv.textContent;
+        var options = {};
+        if (currentEp === 'ingest') {
+            var bodyInput = document.getElementById('p-body');
+            var parsed;
+            try {
+                parsed = JSON.parse(bodyInput.value);
+            } catch (e) {
+                resultDiv.textContent = 'Error: invalid JSON body';
+                resultDiv.className = 'api-result error';
+                return;
+            }
+            options = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(parsed)
+            };
+        }
         resultDiv.innerHTML = '<span class="tester-loading">Loading...</span>';
         resultDiv.className = 'api-result loaded';
-        fetch(url).then(function(r){return r.json()}).then(function(data){
+        fetch(url, options).then(function(r){return r.json()}).then(function(data){
             resultDiv.textContent = JSON.stringify(data, null, 2);
             resultDiv.className = 'api-result loaded';
         }).catch(function(e){

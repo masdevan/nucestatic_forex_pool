@@ -7,6 +7,8 @@ from app.databases.config import engine, Base
 
 MIGRATIONS_DIR = Path(__file__).parent
 TABLE_NAME = "alembic_version"
+TYPE = os.getenv("TYPE", "static").strip().lower()
+DYNAMIC_SKIPPED_MIGRATIONS = {"20260904_ohlc_dynamic"}
 
 def ensure_database():
     from app.databases.config import MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE
@@ -66,6 +68,10 @@ def run_migrations():
         version = migration_file.replace("version_", "").replace(".py", "")
 
         if version in applied_versions:
+            continue
+
+        if TYPE == "dynamic" and version in DYNAMIC_SKIPPED_MIGRATIONS:
+            print(f"Skipping migration (dynamic mode): {version}")
             continue
 
         print(f"Applying migration: {version}")
@@ -160,6 +166,11 @@ def migrate_fresh():
     print("All tables dropped.")
 
     create_version_table()
+
+    if TYPE == "dynamic":
+        run_migrations()
+        print("Fresh migration complete.")
+        return
 
     print("Creating symbols table...")
     module = importlib.import_module("app.databases.migrations.version_20260904_symbols")

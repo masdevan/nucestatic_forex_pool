@@ -3,6 +3,15 @@ from sqlalchemy import text
 TIMEFRAMES = ["m1", "m5", "m15", "m30", "h1", "h4", "d1", "w1", "mn1"]
 
 def upgrade(conn):
+    symbols_table = conn.execute(text(
+        "SELECT COUNT(*) FROM information_schema.tables "
+        "WHERE table_schema = DATABASE() AND table_name = 'symbols'"
+    )).scalar()
+
+    if not symbols_table:
+        print("Symbols table not found, skipping OHLC table creation")
+        return
+
     result = conn.execute(text("SELECT DISTINCT name FROM symbols"))
     symbols = [row[0] for row in result.fetchall()]
 

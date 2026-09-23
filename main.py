@@ -1,21 +1,31 @@
 import os
 import re
 import time
+from datetime import datetime
 from pathlib import Path
 import uvicorn
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import Response, FileResponse
 from sqlalchemy import text
 from pydantic import BaseModel
 from typing import Any
+from app.api.models.ohlc_model import CandleIngest
 # from app.api.models.configs.mt5_config import init_mt5, shutdown_mt5, get_terminal_info
 
 load_dotenv()
 
 PORT = int(os.getenv("PORT", "8765"))
+TYPE = os.getenv("TYPE", "static").strip().lower()
+if TYPE not in ("static", "dynamic"):
+    TYPE = "static"
+MIN_START_DATE = os.getenv("MIN_START_DATE", "").strip()
+try:
+    datetime.strptime(MIN_START_DATE, "%Y-%m-%d")
+except ValueError:
+    MIN_START_DATE = ""
 CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
 
 app = FastAPI(
@@ -58,6 +68,8 @@ async def health_check():
     # terminal = get_terminal_info()
     return {
         "status": "healthy",
+        "type": TYPE,
+        "min_start_date": MIN_START_DATE or None,
         # "mt5_connected": terminal is not None
     }
 
@@ -243,6 +255,16 @@ def symbol_ohlc(
         }
     finally:
         db.close()
+
+@app.post("/api/ohlc")
+def ingest_ohlc(payload: CandleIngest | list[CandleIngest]):
+    from app.api.controllers.ohlc_ingest_controller import ingest_candles
+    candles = payload if isinstance(payload, list) else [payload]
+    try:
+        results = ingest_candles(candles, MIN_START_DATE)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+    return {"status": "ok", "results": results}
 
 @app.get("/api/centrifugo/token")
 async def centrifugo_token():

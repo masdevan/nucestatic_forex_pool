@@ -2,7 +2,7 @@
 
 ## Health
 - GET /api/health
-  - Returns: { status }
+  - Returns: { status, type, min_start_date } (type: static | dynamic, from env TYPE, default static; min_start_date: YYYY-MM-DD or null, from env MIN_START_DATE)
 
 ## Symbols
 - GET /api/symbols?search={query}&limit=50&page=1
@@ -29,6 +29,20 @@
   - Returns: { symbol, timeframe, data: [{ symbol, open, high, low, close, time }], has_next, next_cursor }
     - has_next: false when there is no more data (the last batch contains fewer than limit+1 rows)
     - next_cursor: forward mode = timestamp of the last (newest) row sent; backward mode (before) = timestamp of the first (oldest) row sent; null when data is empty
+
+## Ingest
+- POST /api/ohlc
+  - Body: single candle object or array of candles
+    - server: optional (string)
+    - symbol: required
+    - timeframe: required (m1, m5, m15, m30, h1, h4, d1, w1, mn1; case-insensitive)
+    - open, high, low, close: required (number)
+    - time: required (unix timestamp in seconds)
+  - Creates the ohlc_{symbol}_{timeframe} table, ohlc_page_anchor, symbols, and symbol_ranges automatically when missing
+  - Creates the candle if new, updates open/high/low/close when the candle already exists
+  - Candles older than MIN_START_DATE (env) are skipped with action "skipped"
+  - Updates ohlc_page_anchor automatically; rebuilds anchors only when an older candle is inserted
+  - Returns: { status, results: [{ action: created|updated|skipped, symbol, timeframe, table_created, anchors_rebuilt }] }
 
 ## Centrifugo
 - GET /api/centrifugo/token

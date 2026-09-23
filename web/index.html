@@ -103,6 +103,11 @@
                         /api/ohlc/{symbol}?timeframe=m1&start_date=2026-01-01&end_date=2026-01-02&limit=50&cursor={next_cursor}&before={before}
                         <span class="api-params-inline">symbol, timeframe, start_date, end_date, limit, cursor, before</span>
                     </div>
+                    <div class="api-endpoint-item" data-ep="ingest">
+                        <span class="method post">POST</span>
+                        /api/ohlc
+                        <span class="api-params-inline">server, symbol, timeframe, open, high, low, close, time</span>
+                    </div>
                 </div>
 
                 <h2>Tester</h2>

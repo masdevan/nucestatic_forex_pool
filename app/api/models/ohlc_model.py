@@ -15,3 +15,13 @@ class OHLCResponse(BaseModel):
     end_date: str
     data: List[OHLCData]
     total_records: int
+
+class CandleIngest(BaseModel):
+    server: str = ""
+    symbol: str
+    timeframe: str
+    open: float
+    high: float
+    low: float
+    close: float
+    time: int
