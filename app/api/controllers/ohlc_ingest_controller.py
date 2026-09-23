@@ -140,17 +140,19 @@ def save_range(conn, item, range_id, count, inserted):
         ), {"stamp": stamp, "delta": delta, "id": range_id})
         return
     conn.execute(text(
-        "INSERT INTO symbol_ranges (server, symbol, timeframe, first_ts, last_ts, count) "
-        "VALUES (:server, :symbol, :timeframe, :stamp, :stamp, :count)"
+        f"INSERT INTO symbol_ranges (server, symbol, timeframe, first_ts, last_ts, count) "
+        f"VALUES (:server, :symbol, :timeframe, :stamp, :stamp, :count) "
+        f"ON DUPLICATE KEY UPDATE first_ts = LEAST(first_ts, VALUES(first_ts)), "
+        f"last_ts = GREATEST(last_ts, VALUES(last_ts)), "
+        f"count = (SELECT COUNT(*) FROM `{item['table']}` WHERE symbol = :symbol)"
     ), {"server": item["server"], "symbol": item["symbol"], "timeframe": item["timeframe"].upper(),
         "stamp": stamp, "count": count + delta})
 
 
 def save_symbol(conn, item):
     conn.execute(text(
-        "INSERT INTO symbols (server, name) "
-        "SELECT :server, :name FROM DUAL "
-        "WHERE NOT EXISTS (SELECT 1 FROM symbols WHERE name = :name)"
+        "INSERT INTO symbols (server, name) VALUES (:server, :name) "
+        "ON DUPLICATE KEY UPDATE server = server"
     ), {"server": item["server"], "name": item["symbol"]})
 
 
@@ -223,12 +225,19 @@ def ingest_candles(candles, min_start_date=""):
         for item in items:
             item["table_created"] = ensure_tables(conn, item["table"])
     results = []
-    with engine.begin() as conn:
-        for item in items:
-            if min_start is not None and item["time"] < min_start:
-                results.append(skipped_result(item))
-                continue
-            results.append(upsert_candle(conn, item))
+    pending_error = None
+    for item in items:
+        if min_start is not None and item["time"] < min_start:
+            results.append(skipped_result(item))
+            continue
+        try:
+            with engine.begin() as conn:
+                results.append(upsert_candle(conn, item))
+        except Exception as error:
+            if pending_error is None:
+                pending_error = error
+    if pending_error is not None:
+        raise pending_error
     return results
 
 
@@ -279,7 +288,9 @@ def reconcile_symbol_ranges():
                         server_name = symbol_server[0] or ""
                     conn.execute(text(
                         "INSERT INTO symbol_ranges (server, symbol, timeframe, first_ts, last_ts, count) "
-                        "VALUES (:server, :symbol, :timeframe, :first_ts, :last_ts, :count)"
+                        "VALUES (:server, :symbol, :timeframe, :first_ts, :last_ts, :count) "
+                        "ON DUPLICATE KEY UPDATE first_ts = VALUES(first_ts), "
+                        "last_ts = VALUES(last_ts), count = VALUES(count)"
                     ), {"server": server_name, "symbol": symbol_name, "timeframe": timeframe.upper(),
                         "first_ts": first_stamp, "last_ts": last_stamp, "count": actual_count})
                 rebuild_anchors(symbol_name, timeframe, conn)
